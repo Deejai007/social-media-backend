@@ -1,0 +1,29 @@
+@admin
+	~employee-CRUD
+	~branch-CRUD
+	~report by branch,employee,user
+			
+@employee
+	~user-CRUD
+	~transaction-CR
+	~get transcations
+			$tpin
+@user
+	~profile-CRUD
+	~transaction-initiate
+	~his history
+			$tpin
+
+
+#transaction
+#branch
+
+^TABLES
+	employee
+	user
+	transaction-transaction id(PK),initiator type,initiator id,timestamp,amount,src account id, dest account id
+	branch
+
+https://chat.openai.com/c/172be8b9-4301-48d2-8eab-b8c6bf9f6319
+	
+
