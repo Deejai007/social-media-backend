@@ -1,23 +1,18 @@
-@admin
-	~employee-CRUD
-	~branch-CRUD
-	~report by branch,employee,user
-			
-@employee
-	~user-CRUD
-	~transaction-CR
-	~get transcations
-			$tpin
-@user
-	~profile-CRUD
-	~transaction-initiate
-	~his history
-			$tpin
-
-
-#transaction
-#branch
-
+TODO
+{
+	-check username unique button on username form 
+	-user register/login data validation
+	-check time for otp verification
+	-check time of otp in db before sending new otp mail
+	- check for already present otp and its time before adding or updating that otp
+	-create 1 otp field for each user so dont have to create  destroy rows    everytime 
+	
+}
+SIM
+{
+	temp table for username so username is never duplicate
+	friends
+}
 ^TABLES
 	employee
 	user
@@ -26,4 +21,5 @@
 
 https://chat.openai.com/c/172be8b9-4301-48d2-8eab-b8c6bf9f6319
 	
+
 

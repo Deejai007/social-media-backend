@@ -4,7 +4,12 @@ module.exports = (sequelize, DataTypes) => {
   class User extends Model {}
   User.init(
     {
-      id: { type: DataTypes.STRING, primaryKey: true, allowNull: false },
+      _id: {
+        type: DataTypes.INTEGER,
+        primaryKey: true,
+        autoIncrement: true,
+      },
+      username: { type: DataTypes.STRING, unique: true, allowNull: false },
       firstName: {
         type: DataTypes.STRING,
         allowNull: false,
@@ -12,12 +17,26 @@ module.exports = (sequelize, DataTypes) => {
       lastName: {
         type: DataTypes.STRING,
       },
+      email: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        unique: true,
+        validate: {
+          isEmail: true,
+        },
+      },
       password: {
         type: DataTypes.STRING,
         allowNull: false,
       },
+      verified: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false,
+        allowNull: false,
+      },
       isAdmin: {
         type: DataTypes.BOOLEAN,
+        defaultValue: false,
         allowNull: false,
       },
       tpin: {
@@ -35,6 +54,5 @@ module.exports = (sequelize, DataTypes) => {
       modelName: "User",
     }
   );
-
   return User;
 };

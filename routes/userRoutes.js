@@ -1,19 +1,13 @@
 const express = require("express");
 const router = express.Router();
-
+const authctrl = require("../controllers/userController");
 // Route for user registration
-router.post("/register", (req, res) => {
-  // Implement user registration logic here
-});
+router.post("/register", authctrl.register);
+router.post("/verify", authctrl.verify);
+router.post("/verify/sendotp", authctrl.sendotp);
+router.post("/login", authctrl.login);
 
-// Route for user login
-router.post("/login", (req, res) => {
-  // Implement user login logic here
-});
-
-// Route for user logout
-router.post("/logout", (req, res) => {
-  // Implement user logout logic here
-});
-
+router.post("/forgot/send", authctrl.forgotsendotp);
+router.post("/forgot/verify", authctrl.forgotverify);
+router.post("/forgot/reset", authctrl.resetpass);
 module.exports = router;

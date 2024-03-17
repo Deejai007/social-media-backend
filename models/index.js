@@ -55,4 +55,21 @@ Object.keys(db).forEach((modelName) => {
 db.sequelize = sequelize;
 db.Sequelize = Sequelize;
 
+// async function emptyDatabase() {
+//   try {
+//     // Get all table names
+//     const tableNames = Object.keys(sequelize.models);
+
+//     // Iterate over each table
+//     for (const tableName of tableNames) {
+//       // Delete all rows from the table
+//       await sequelize.query(`DELETE FROM "${tableName}";`);
+//     }
+
+//     console.log("Database emptied successfully.");
+//   } catch (error) {
+//     console.error("Error emptying database:", error);
+//   }
+// }
+// emptyDatabase();
 module.exports = db;

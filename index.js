@@ -2,7 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const app = express();
 require("dotenv").config();
-var authRoutes = require("./routes/authRoutes");
+
 var userRoutes = require("./routes/userRoutes");
 var adminRoutes = require("./routes/adminRoutes");
 var corsOptions = {
@@ -29,7 +29,6 @@ app.get("/", (req, res) => {
   res.json({ message: "Welcome!" });
 });
 // routes
-app.use("/auth", authRoutes);
 app.use("/user", userRoutes);
 app.use("/admin", adminRoutes);
 

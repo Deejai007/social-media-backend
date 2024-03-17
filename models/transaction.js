@@ -7,11 +7,11 @@ module.exports = (sequelize, DataTypes) => {
     static associate(models) {
       Transaction.belongsTo(models.User, {
         as: "Sender",
-        foreignKey: "id",
+        foreignKey: "username",
       });
       Transaction.belongsTo(models.User, {
         as: "Receiver",
-        foreignKey: "id",
+        foreignKey: "username",
       });
     }
   }
