@@ -4,7 +4,6 @@ const app = express();
 require("dotenv").config();
 
 var userRoutes = require("./routes/userRoutes");
-var adminRoutes = require("./routes/adminRoutes");
 var corsOptions = {
   origin: "http://localhost:8081", //frontend url
 };
@@ -30,7 +29,6 @@ app.get("/", (req, res) => {
 });
 // routes
 app.use("/user", userRoutes);
-app.use("/admin", adminRoutes);
 
 const PORT = process.env.PORT || 8969;
 app.listen(PORT, () => {
