@@ -4,7 +4,7 @@ module.exports = (sequelize, DataTypes) => {
   class User extends Model {}
   User.init(
     {
-      _id: {
+      id: {
         type: DataTypes.INTEGER,
         primaryKey: true,
         autoIncrement: true,
@@ -29,24 +29,20 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.STRING,
         allowNull: false,
       },
-      verified: {
-        type: DataTypes.BOOLEAN,
-        defaultValue: false,
-        allowNull: false,
+      reset_password_token: {
+        type: DataTypes.STRING,
       },
-      isAdmin: {
-        type: DataTypes.BOOLEAN,
-        defaultValue: false,
-        allowNull: false,
+      reset_password_expire: {
+        type: DataTypes.STRING,
       },
-      tpin: {
-        type: DataTypes.INTEGER,
-        validate: { isInt: true, len: [4, 4] },
+      profile_image: {
+        type: DataTypes.STRING,
       },
-      balance: {
-        type: DataTypes.DECIMAL,
-        defaultValue: 0.0,
-        allowNull: false,
+      about: {
+        type: DataTypes.STRING,
+      },
+      location: {
+        type: DataTypes.STRING,
       },
     },
     {

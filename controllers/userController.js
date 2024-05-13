@@ -1,4 +1,5 @@
 const { check, validationResult } = require("express-validator");
+const asyncHandler = require("express-async-handler");
 const otpmodel = require("../models").otpmodel;
 const otpGenerator = require("otp-generator");
 const nodemailer = require("nodemailer");
@@ -21,6 +22,21 @@ const createAccessToken = (user) => {
   return jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: "1d" });
 };
 const userController = {
+  // test
+  test: asyncHandler(async (req, res, next) => {
+    const { email } = req.body;
+    const user_db = await User.findOne({
+      where: {
+        email: email,
+      },
+    });
+    if (!user_db) {
+      const error = new Error("User not found");
+      error.status = 404;
+      throw error;
+    }
+    await user_db.save();
+  }),
   // new user register
   register: async (req, res) => {
     try {
@@ -379,12 +395,10 @@ const userController = {
           msg: "password changed successfully",
         });
       } else
-        res
-          .status(400)
-          .json({
-            success: false,
-            msg: "OTP verification Incomplete,please try again",
-          });
+        res.status(400).json({
+          success: false,
+          msg: "OTP verification Incomplete,please try again",
+        });
     } catch (error) {
       res.status(400).json({ success: false, msg: error.message });
       console.log(error);
