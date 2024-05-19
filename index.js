@@ -1,3 +1,4 @@
+const { errorHandler } = require("./middleware/errorMiddleware");
 const express = require("express");
 const cors = require("cors");
 const app = express();
@@ -31,11 +32,11 @@ app.get("/", (req, res) => {
 app.use("/user", userRoutes);
 
 // error
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(err.status || 500).send(err.message || "Internal Server Error");
-});
-
+// app.use((err, req, res, next) => {
+//   console.error(err.stack);
+//   res.status(err.status || 500).send(err.message || "Internal Server Error");
+// });
+app.use(errorHandler);
 // start server
 const PORT = process.env.PORT || 8969;
 app.listen(PORT, () => {
