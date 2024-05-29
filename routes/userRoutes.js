@@ -1,6 +1,8 @@
 const express = require("express");
 const router = express.Router();
 const authctrl = require("../controllers/userController");
+const { errorHandler } = require("../middleware/errorMiddleware");
+
 router.post("/", (req, res) => res.status(200).json({ msg: "Server is up" }));
 
 router.post("/test", authctrl.test);
@@ -11,6 +13,7 @@ router.post("/verify/sendotp", authctrl.sendotp);
 router.post("/login", authctrl.login);
 
 router.post("/forgot/send", authctrl.forgotsendotp);
-router.post("/forgot/verify", authctrl.forgotverify);
-router.post("/forgot/reset", authctrl.resetpass);
+// router.post("/forgot/verify", authctrl.forgotverify);
+// router.post("/forgot/reset", authctrl.resetpass);
+router.post("/forgot/resetpassword", authctrl.resetPassword);
 module.exports = router;

@@ -31,12 +31,9 @@ app.get("/", (req, res) => {
 // routes
 app.use("/user", userRoutes);
 
-// error
-// app.use((err, req, res, next) => {
-//   console.error(err.stack);
-//   res.status(err.status || 500).send(err.message || "Internal Server Error");
-// });
+// custom error
 app.use(errorHandler);
+
 // start server
 const PORT = process.env.PORT || 8969;
 app.listen(PORT, () => {

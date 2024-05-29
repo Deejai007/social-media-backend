@@ -1,5 +1,5 @@
 const { check, validationResult } = require("express-validator");
-const CustomError = require("../helpers/errorH");
+const CustomError = require("../helpers/customError");
 // const { errorHandler } = require("../middleware/errorMiddleware");
 const asyncHandler = require("express-async-handler");
 const otpmodel = require("../models").otpmodel;
@@ -26,69 +26,18 @@ const createAccessToken = (user) => {
 const userController = {
   // test
   test: asyncHandler(async (req, res, next) => {
-    const { email } = req.body;
-    const user_db = await User.findOne({
-      where: {
-        email: email,
-      },
-    });
-    console.log("hi");
+    // try {
+    // throw new CustomError("Test error message ", false, 404);
+    return next(new CustomError("Condition failed", false, 400));
+    // } catch (error) {
+    console.log(error);
 
-    console.log(user_db);
-    if (!user_db) {
-      // throw new Error("Something went wrong!");
-      // const error = new Error("User not found!");
-      // error.status = 404;
-      // throw error;
-      return next(new CustomError("Please Check Your Passwordplease", 400));
-    }
-    await user_db.save();
+    // next(error);
+    // }
   }),
 
-  // test: async (req, res) => {
-  //   try {
-  //     const { email } = req.body;
-  //     const user_db = await User.findOne({
-  //       where: {
-  //         email: email,
-  //       },
-  //     });
-  //     if (!user_db) {
-  //       const error = new Error("User not found");
-  //       error.status = 404;
-  //       throw error;
-  //     }
-  //     await user_db.save();
-  //   } catch (error) {
-  //     console.log(error);
-  //     res.status(400).json({ success: false, msg: error.message });
-  //   }
-  // },
-
-  // test: async (req, res, next) => {
-  //   try {
-  //     const { email } = req.body;
-  //     const user_db = await User.findOne({
-  //       where: {
-  //         email: email,
-  //       },
-  //     });
-  //     if (!user_db) {
-  //       const error = new Error("User not found");
-  //       error.status = 404;
-  //       throw error;
-  //     }
-  //     await user_db.save();
-  //     res.status(400).json({ success: true, user: user_db });
-  //   } catch (error) {
-  //     console.log(error);
-
-  //     next(error); // Pass the error to the error handling middleware
-  //   }
-  // },
-
   // new user register
-  register: async (req, res, next) => {
+  register: asyncHandler(async (req, res, next) => {
     let { username, email, password, firstName, lastName } = req.body;
     email = email.toLowerCase();
     const userCount = await User.count({
@@ -144,7 +93,7 @@ const userController = {
             return next(
               new CustomError(
                 "There was an error sending OTP to email for verification!",
-                400
+                500
               )
             );
           } else {
@@ -160,17 +109,18 @@ const userController = {
         return next(
           new CustomError(
             "This username is not available.Please choose new username!",
+            false,
             400
           )
         );
       }
     } else {
-      return next(new CustomError("User with this existdj", 400));
+      return next(new CustomError("User with this exist", false, 400));
     }
-  },
+  }),
 
   // Verify Email using OTP
-  verify: async (req, res) => {
+  verify: asyncHandler(async (req, res, next) => {
     const { email, otp } = req.body;
 
     const user_db = await User.findOne({
@@ -192,14 +142,17 @@ const userController = {
 
     if (user_db.verified) {
       return res
-        .status(400)
-        .json({ success: false, msg: "User already verified!" });
+        .status(200)
+
+        .json({ success: true, msg: "User already verified!" });
+      // return next(new CustomError("User already verified!", 400));
     }
 
     if (!otp_db) {
-      return res
-        .status(400)
-        .json({ success: false, msg: "OTP timed out. Please resend OTP!" });
+      // return res
+      //   .status(400)
+      //   .json({ success: false, msg: "OTP timed out. Please resend OTP!" });
+      return next(new CustomError("OTP timed out. Please resend OTP!", 400));
     }
 
     if (otp_db.otp === otp) {
@@ -237,23 +190,21 @@ const userController = {
         accessToken,
       });
     } else {
-      res.status(400).json({
-        success: false,
-        msg: "OTP incorrect",
-      });
+      return next(new CustomError("OTP incorrect", 401));
     }
-  },
+  }),
 
   // verify by sending otp
-  sendotp: async (req, res) => {
+  sendotp: asyncHandler(async (req, res, next) => {
     const { email } = req.body;
     const user_db = await User.findOne({
       where: {
         email: email,
       },
     });
-    if (!user_db) throw new Error("No user found!");
-    if (user_db.verified) throw new Error("User already verified!");
+    if (!user_db) return next(new CustomError("No user found!", false, 400));
+    if (user_db.verified)
+      return next(new CustomError("User already verified!", true, 200));
     const otp_db = await otpmodel.findOne({
       where: {
         email: email,
@@ -290,7 +241,8 @@ const userController = {
     transporter.sendMail(mailoptions, (err, info) => {
       if (err) {
         console.log(err);
-        throw new Error("Mail not sent");
+        return next(new CustomError("Error sending mail!", 500));
+        // throw new Error("Mail not sent");
       } else {
         console.log("mail sent");
       }
@@ -299,70 +251,66 @@ const userController = {
       success: true,
       msg: "mail sent",
     });
-    // } catch (error) {
-    //   console.log(error);
-    //   res.status(400).json({ success: false, msg: error.message });
-    // }
-  },
+  }),
 
   // User login
-  login: async (req, res) => {
-    try {
-      let { email, password } = req.body;
-      email = email.toLowerCase();
-      const user_db = await User.findOne({
-        where: {
-          email: email,
-        },
-      });
+  login: asyncHandler(async (req, res, next) => {
+    let { email, password } = req.body;
+    email = email.toLowerCase();
+    const user_db = await User.findOne({
+      where: {
+        email: email,
+      },
+    });
 
-      if (!user_db) throw new Error("Invalid credentials!");
-      if (!user_db.verified)
-        throw new Error("User Not Verified! Pleae verify first");
-      const result = await bcrypt.compare(password, user_db.password);
-      if (!result) throw new Error("Invalid credentials!");
-      const accesstoken = createAccessToken({ id: user_db._id });
-      res.status(200).json({
-        success: true,
-        msg: "Login successful",
-        accesstoken,
-        id: user_db._id,
-      });
-    } catch (error) {
-      res.status(400).json({ success: false, msg: error.message });
-    }
-  },
+    if (!user_db) return next(new CustomError("Invalid Credentials", 401));
+    if (!user_db.verified)
+      return next(
+        new CustomError("User Not Verified! Pleae verify first", 403)
+      );
+    const result = await bcrypt.compare(password, user_db.password);
+    if (!result) throw new Error("Invalid credentials!");
+    const accesstoken = createAccessToken({ id: user_db._id });
+    res.status(200).json({
+      success: true,
+      msg: "Login successful",
+      accesstoken,
+      id: user_db._id,
+    });
+  }),
   // forgot password- send OTP
-  forgotsendotp: async (req, res) => {
-    try {
-      const { email } = req.body;
-      const user_db = await User.findOne({
-        where: {
-          email: email,
-        },
-      });
-      if (!user_db) throw new Error("No user found!");
-      const otp_db = await otpmodel.findOne({
-        where: {
-          email: email,
-        },
-      });
-      const new_otp = otpGenerator.generate(6, {
-        upperCaseAlphabets: false,
-        specialChars: false,
-        lowerCaseAlphabets: false,
-      });
-      if (!otp_db) {
-        const new_otp_db = await otpmodel.create({ email, otp: new_otp });
-      } else {
-        otp_db.otp = new_otp;
-        await otp_db.save();
-      }
-      const mailoptions = {
-        from: process.env.m_email,
-        to: email,
-        subject: `${process.env.pro_name} - Forgot password `,
-        html: `
+  forgotsendotp: asyncHandler(async (req, res, next) => {
+    const { email } = req.body;
+    const user_db = await User.findOne({
+      where: {
+        email: email,
+      },
+    });
+    if (!user_db)
+      return next(
+        new CustomError("User not found! Please register first", 400)
+      );
+    const otp_db = await otpmodel.findOne({
+      where: {
+        email: email,
+      },
+    });
+    const new_otp = otpGenerator.generate(6, {
+      upperCaseAlphabets: false,
+      specialChars: false,
+      lowerCaseAlphabets: false,
+    });
+    if (!otp_db) {
+      const new_otp_db = await otpmodel.create({ email, otp: new_otp });
+    } else {
+      otp_db.otp = new_otp;
+      await otp_db.save();
+    }
+    const mailoptions = {
+      from: process.env.m_email,
+      to: email,
+      subject: `${process.env.pro_name} - Forgot password `,
+      html: `
         <div
           class="container"
           style="max-width: 90%; margin: auto; padding-top: 20px"
@@ -373,99 +321,155 @@ const userController = {
           <h1 style="font-size: 40px; letter-spacing: 2px; text-align:center;">${new_otp}</h1>
      </div>
       `,
-      };
-      transporter.sendMail(mailoptions, (err, info) => {
-        if (err) {
-          console.log(err);
-          throw new Error("Mail not sent");
-        } else {
-          console.log("mail sent");
-        }
-      });
-      console.log(new_otp);
+    };
+    transporter.sendMail(mailoptions, (err, info) => {
+      if (err) {
+        console.log(err);
+        throw new Error("Mail not sent");
+      } else {
+        console.log("mail sent");
+      }
+    });
+    console.log(new_otp);
 
-      res.status(200).json({
-        success: true,
-        msg: "OTP sent to email!",
-        id: user_db._id,
-      });
-    } catch (error) {
-      res.status(400).json({ success: false, msg: error.message });
-    }
-  },
+    res.status(200).json({
+      success: true,
+      msg: "OTP sent to email!",
+      id: user_db._id,
+    });
+  }),
 
-  // forgot password- verify OTP
-  forgotverify: async (req, res) => {
+  // // forgot password- verify OTP
+  // forgotverify: asyncHandler(async (req, res, next) => {
+  //   const { email, otp } = req.body;
+  //   const user_db = await User.findOne({
+  //     where: {
+  //       email: email,
+  //     },
+  //   });
+  //   if (!user_db)
+  //     return next(
+  //       new CustomError("No user found! Please register first.", 400)
+  //     );
+  //   const userotp_db = await otpmodel.findOne({
+  //     where: {
+  //       email: email,
+  //     },
+  //   });
+  //   if (!userotp_db) return next(new CustomError("OTP timed out!", 400));
+  //   if (userotp_db.otp == otp) {
+  //     userotp_db.verify = true;
+  //     user_db.verified = true;
+  //     await userotp_db.save();
+  //     res.status(200).json({
+  //       success: true,
+  //       msg: "OTP user verified",
+  //     });
+  //   } else return next(new CustomError("OTP is incorrect", 400));
+  // }),
+  // // forgot password- reset password
+  // resetpass: asyncHandler(async (req, res, next) => {
+  //   console.log(req.route.path);
+  //   const { email, password } = req.body;
+  //   const user_db = await User.findOne({
+  //     where: {
+  //       email: email,
+  //     },
+  //   });
+  //   if (!user_db) throw new Error("No user found!");
+  //   const userotp_db = await otpmodel.findOne({
+  //     where: {
+  //       email: email,
+  //     },
+  //   });
+  //   if (!userotp_db)
+  //     return next(
+  //       new CustomError("OTP times out! Please resend otp to verify.", 400)
+  //     );
+  //   if (userotp_db.verify == true) {
+  //     const result = await bcrypt.compare(password, user_db.password);
+  //     if (result)
+  //       return next(
+  //         new CustomError("New password cannot be same as old password", 400)
+  //       );
+  //     // const passwordHash = await bcrypt.hash(password, 12);
+  //     const salt = await bcrypt.genSalt(12);
+  //     const hash = await bcrypt.hash(password, salt);
+  //     user_db.password = hash;
+  //     await user_db.save();
+  //     userotp_db.verify = false;
+  //     await userotp_db.save();
+
+  //     res.status(200).json({
+  //       success: true,
+  //       msg: "password changed successfully",
+  //     });
+  //   } else
+  //     return next(
+  //       new CustomError("OTP verification incomplete! Please try again.", 400)
+  //     );
+  // }),
+  //  verifying OTP and resetting password
+  resetPassword: asyncHandler(async (req, res, next) => {
+    const { email, otp, newPassword } = req.body;
+
     try {
-      const { email, otp } = req.body;
-      const user_db = await User.findOne({
-        where: {
-          email: email,
-        },
-      });
-      if (!user_db) throw new Error("No user found!");
-      const userotp_db = await otpmodel.findOne({
-        where: {
-          email: email,
-        },
-      });
-      if (!userotp_db) throw new Error("OTP timed out.");
-      if (userotp_db.otp == otp) {
-        userotp_db.verify = true;
-        user_db.verified = true;
-        await userotp_db.save();
-        res.status(200).json({
-          success: true,
-          msg: "OTP user verified",
-        });
-      } else res.status(400).json({ success: false, msg: "OTP incorrect" });
-    } catch (error) {
-      console.log(error);
-      res.status(400).json({ success: false, msg: error.message });
-    }
-  },
-  // forgot password- reset password
-  resetpass: async (req, res) => {
-    try {
-      console.log(req.route.path);
-      const { email, password } = req.body;
-      const user_db = await User.findOne({
-        where: {
-          email: email,
-        },
-      });
-      if (!user_db) throw new Error("No user found!");
-      const userotp_db = await otpmodel.findOne({
-        where: {
-          email: email,
-        },
-      });
-      if (!userotp_db) throw new Error("Verification Timed OUT");
-      if (userotp_db.verify == true) {
-        const result = await bcrypt.compare(password, user_db.password);
-        if (result)
-          throw new Error("New password cannot be same as old password");
-        // const passwordHash = await bcrypt.hash(password, 12);
-        const salt = await bcrypt.genSalt(12);
-        const hash = await bcrypt.hash(password, salt);
-        user_db.password = hash;
-        await user_db.save();
-        userotp_db.verify = false;
-        await userotp_db.save();
+      const user = await User.findOne({ where: { email } });
+      if (!user) {
+        return next(
+          new CustomError("No user found! Please register first.", 400)
+        );
+      }
 
-        res.status(200).json({
-          success: true,
-          msg: "password changed successfully",
-        });
-      } else
-        res.status(400).json({
-          success: false,
-          msg: "OTP verification Incomplete,please try again",
-        });
+      const userOtp = await otpmodel.findOne({ where: { email } });
+      if (!userOtp) {
+        return next(
+          new CustomError("OTP timed out! Please resend OTP to verify.", 400)
+        );
+      }
+
+      if (userOtp.otp !== otp) {
+        return next(
+          new CustomError("Incorrect OTP! Please verify and try again.", 400)
+        );
+      }
+
+      if (userOtp.verify) {
+        return next(
+          new CustomError(
+            "OTP already verified! You can proceed to reset your password",
+            true,
+            200
+          )
+        );
+      }
+
+      const isSamePassword = await bcrypt.compare(newPassword, user.password);
+      if (isSamePassword) {
+        return next(
+          new CustomError(
+            "New password cannot be the same as the old password.",
+            400
+          )
+        );
+      }
+
+      const salt = await bcrypt.genSalt(12);
+      const hash = await bcrypt.hash(newPassword, salt);
+      user.password = hash;
+      await user.save();
+
+      userOtp.verify = true;
+      await userOtp.save();
+
+      return res
+        .status(200)
+        .json({ success: true, msg: "Password reset successful." });
     } catch (error) {
-      res.status(400).json({ success: false, msg: error.message });
-      console.log(error);
+      return next(
+        new CustomError("Server error. Please try again later.", 500)
+      );
     }
-  },
+  }),
 };
 module.exports = userController;
