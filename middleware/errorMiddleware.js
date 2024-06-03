@@ -3,14 +3,14 @@ const errorHandler = (err, req, res, next) => {
 
   // Set the status code to the error status or default to 500
   res.status(statusCode);
-  console.log(err.stack);
+  console.log("################~~~~~~~~~~~~~");
+  console.log(err);
+  console.log("################~~~~~~~~~~~~~");
 
   res.json({
     success: err.success || false,
     message: err.message || "Internal Server Errordj",
-    ...(process.env.NODE_ENV === "development" && {
-      stack: err.stack,
-    }),
+    staack: err.stack,
   });
 };
 

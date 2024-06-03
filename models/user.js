@@ -1,7 +1,15 @@
 "use strict";
 const { Model } = require("sequelize");
 module.exports = (sequelize, DataTypes) => {
-  class User extends Model {}
+  class User extends Model {
+    static associate(models) {
+      // company.hasMany(models.User, { as: "employees" });
+      User.belongsTo(models.Company, {
+        foreignKey: "companyId",
+        as: "company",
+      });
+    }
+  }
   User.init(
     {
       id: {
@@ -29,14 +37,18 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.STRING,
         allowNull: false,
       },
-      reset_password_token: {
-        type: DataTypes.STRING,
-      },
-      reset_password_expire: {
-        type: DataTypes.STRING,
-      },
+      // reset_password_token: {
+      //   type: DataTypes.STRING,
+      // },
+      // reset_password_expire: {
+      //   type: DataTypes.STRING,
+      // },
       profile_image: {
         type: DataTypes.STRING,
+      },
+      verified: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false,
       },
       about: {
         type: DataTypes.STRING,

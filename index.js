@@ -4,7 +4,7 @@ const cors = require("cors");
 const app = express();
 require("dotenv").config();
 
-var userRoutes = require("./routes/userRoutes");
+var routes = require("./router/routes");
 var corsOptions = {
   origin: "http://localhost:8081", //frontend url
 };
@@ -29,7 +29,7 @@ app.get("/", (req, res) => {
   res.json({ message: "Welcome!" });
 });
 // routes
-app.use("/user", userRoutes);
+app.use("/", routes);
 
 // custom error
 app.use(errorHandler);
