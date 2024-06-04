@@ -1,9 +1,21 @@
 "use strict";
 const { Model } = require("sequelize");
 module.exports = (sequelize, DataTypes) => {
-  class otpmodel extends Model {}
-  otpmodel.init(
+  class OtpModel extends Model {
+    static associate(models) {
+      // Company.hasMany(models.User, { as: "employees" });
+      OtpModel.belongsTo(models.User, {
+        foreignKey: "id",
+      });
+    }
+  }
+  OtpModel.init(
     {
+      id: {
+        type: DataTypes.INTEGER,
+        primaryKey: true,
+        autoIncrement: true,
+      },
       email: {
         type: DataTypes.STRING,
         allowNull: false,
@@ -25,5 +37,5 @@ module.exports = (sequelize, DataTypes) => {
       sequelize,
     }
   );
-  return otpmodel;
+  return OtpModel;
 };

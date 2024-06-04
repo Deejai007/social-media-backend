@@ -7,7 +7,7 @@ router.post("/", (req, res) => res.status(200).json({ msg: "Server is up" }));
 
 router.get("/getUser", authctrl.getUser);
 
-router.post("/test", authctrl.test);
+//  router.post("/test", authctrl.test);
 // Route for user registration
 router.post("/register", authctrl.register);
 router.post("/verify", authctrl.verify);

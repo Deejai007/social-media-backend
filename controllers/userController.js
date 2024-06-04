@@ -3,7 +3,7 @@ const CustomError = require("../helpers/customError");
 const { getUserDataFromToken } = require("../helpers/auth/authutils");
 // const { errorHandler } = require("../middleware/errorMiddleware");
 const asyncHandler = require("express-async-handler");
-const otpmodel = require("../models").otpmodel;
+const OtpModel = require("../models").OtpModel;
 const otpGenerator = require("otp-generator");
 const nodemailer = require("nodemailer");
 const User = require("../models").User;
@@ -27,18 +27,6 @@ const createAccessToken = (userData) => {
   });
 };
 const userController = {
-  // test
-  test: asyncHandler(async (req, res, next) => {
-    // try {
-    // throw new CustomError("Test error message ", false, 404);
-    return next(new CustomError("Condition failed", false, 400));
-    // } catch (error) {
-    console.log(error);
-
-    // next(error);
-    // }
-  }),
-
   // get user data
   getUser: asyncHandler(async (req, res, next) => {
     const userData = getUserDataFromToken(req.headers.authorization);
@@ -50,6 +38,7 @@ const userController = {
     }
     res.status(200).json({ success: true, data: user_db });
   }),
+
   // new user register
   register: asyncHandler(async (req, res, next) => {
     let { username, email, password, firstName, lastName } = req.body;
@@ -80,7 +69,7 @@ const userController = {
           specialChars: false,
           lowerCaseAlphabets: false,
         });
-        const opt = await otpmodel.create({
+        const opt = await OtpModel.create({
           email,
           otp: otp_gen,
         });
@@ -143,7 +132,7 @@ const userController = {
       },
     });
 
-    const otp_db = await otpmodel.findOne({
+    const otp_db = await OtpModel.findOne({
       where: {
         email: email,
       },
@@ -219,7 +208,7 @@ const userController = {
     if (!user_db) return next(new CustomError("No user found!", false, 400));
     if (user_db.verified)
       return next(new CustomError("User already verified!", true, 200));
-    const otp_db = await otpmodel.findOne({
+    const otp_db = await OtpModel.findOne({
       where: {
         email: email,
       },
@@ -230,7 +219,7 @@ const userController = {
       lowerCaseAlphabets: false,
     });
     if (!otp_db) {
-      const new_otp_db = await otpmodel.create({ email, otp: new_otp });
+      const new_otp_db = await OtpModel.create({ email, otp: new_otp });
     } else {
       otp_db.otp = new_otp;
       await otp_db.save();
@@ -318,7 +307,7 @@ const userController = {
       return next(
         new CustomError("User not found! Please register first", false, 400)
       );
-    const otp_db = await otpmodel.findOne({
+    const otp_db = await OtpModel.findOne({
       where: {
         email: email,
       },
@@ -329,7 +318,7 @@ const userController = {
       lowerCaseAlphabets: false,
     });
     if (!otp_db) {
-      const new_otp_db = await otpmodel.create({ email, otp: new_otp });
+      const new_otp_db = await OtpModel.create({ email, otp: new_otp });
     } else {
       otp_db.otp = new_otp;
       otp_db.verified = false;
@@ -380,7 +369,7 @@ const userController = {
   //     return next(
   //       new CustomError("No user found! Please register first.", 400)
   //     );
-  //   const userotp_db = await otpmodel.findOne({
+  //   const userotp_db = await OtpModel.findOne({
   //     where: {
   //       email: email,
   //     },
@@ -406,7 +395,7 @@ const userController = {
   //     },
   //   });
   //   if (!user_db) throw new Error("No user found!");
-  //   const userotp_db = await otpmodel.findOne({
+  //   const userotp_db = await OtpModel.findOne({
   //     where: {
   //       email: email,
   //     },
@@ -450,7 +439,7 @@ const userController = {
       );
     }
 
-    const userOtp = await otpmodel.findOne({ where: { email } });
+    const userOtp = await OtpModel.findOne({ where: { email } });
     if (!userOtp || !newPassword) {
       return next(
         new CustomError("Error Occured! Please try again", false, 400)

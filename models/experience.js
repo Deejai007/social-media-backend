@@ -1,13 +1,13 @@
 "use strict";
 const { Model } = require("sequelize");
 module.exports = (sequelize, DataTypes) => {
-  class experience extends Model {
+  class Experience extends Model {
     static associate(models) {
-      experience.belongsTo(models.User, { foreignKey: "id" });
+      Experience.belongsTo(models.User, { foreignKey: "id" });
       // experience.belongsTo(models.Company, { foreignKey: "companyId" });
     }
   }
-  experience.init(
+  Experience.init(
     {
       description: {
         type: DataTypes.STRING,
@@ -31,5 +31,5 @@ module.exports = (sequelize, DataTypes) => {
       sequelize,
     }
   );
-  return experience;
+  return Experience;
 };

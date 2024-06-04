@@ -8,6 +8,9 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: "companyId",
         as: "company",
       });
+      User.hasOne(models.OtpModel, {
+        foreignKey: "id",
+      });
     }
   }
   User.init(
@@ -37,12 +40,6 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.STRING,
         allowNull: false,
       },
-      // reset_password_token: {
-      //   type: DataTypes.STRING,
-      // },
-      // reset_password_expire: {
-      //   type: DataTypes.STRING,
-      // },
       profile_image: {
         type: DataTypes.STRING,
       },
