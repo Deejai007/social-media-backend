@@ -1,6 +1,9 @@
 const { check, validationResult } = require("express-validator");
 const CustomError = require("../helpers/customError");
-const { getUserDataFromToken } = require("../helpers/auth/authutils");
+const {
+  getUserDataFromToken,
+  createAccessToken,
+} = require("../helpers/auth/authutils");
 // const { errorHandler } = require("../middleware/errorMiddleware");
 const asyncHandler = require("express-async-handler");
 const OtpModel = require("../models").OtpModel;
@@ -20,12 +23,6 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-// create access token
-const createAccessToken = (userData) => {
-  return jwt.sign(userData, process.env.ACCESS_TOKEN_SECRET, {
-    expiresIn: "1d",
-  });
-};
 const userController = {
   // get user data
   getUser: asyncHandler(async (req, res, next) => {

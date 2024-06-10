@@ -4,6 +4,14 @@ const jwt = require("jsonwebtoken");
 
 const secretKey = process.env.ACCESS_TOKEN_SECRET;
 
+// create access token
+function createAccessToken(userData) {
+  return jwt.sign(userData, process.env.ACCESS_TOKEN_SECRET, {
+    expiresIn: "1d",
+  });
+}
+
+//  decode access token
 function getUserDataFromToken(authorizationHeader) {
   try {
     if (!authorizationHeader) {
@@ -27,4 +35,5 @@ function getUserDataFromToken(authorizationHeader) {
 
 module.exports = {
   getUserDataFromToken,
+  createAccessToken,
 };

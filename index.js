@@ -13,9 +13,7 @@ app.use(cors(corsOptions));
 
 app.use(express.json());
 
-app.use(
-  express.urlencoded({ extended: true })
-); /* bodyParser.urlencoded() is deprecated */
+app.use(express.urlencoded({ extended: true }));
 
 const db = require("./models/index");
 // db.sequelize.sync();

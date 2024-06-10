@@ -11,6 +11,7 @@ module.exports = (sequelize, DataTypes) => {
       User.hasOne(models.OtpModel, {
         foreignKey: "id",
       });
+      User.hasMany(models.Post, { foreignKey: "user_id" });
     }
   }
   User.init(
