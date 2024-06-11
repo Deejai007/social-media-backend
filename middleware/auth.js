@@ -1,5 +1,5 @@
 const jwt = require("jsonwebtoken");
-const auth = (req, res, next) => {
+const getAccessToRoute = (req, res, next) => {
   try {
     let token = req.header("Authorization");
     console.log(token);
@@ -16,4 +16,5 @@ const auth = (req, res, next) => {
     return res.status(500).json({ msg: err.message });
   }
 };
-module.exports = auth;
+
+module.exports = { getAccessToRoute };

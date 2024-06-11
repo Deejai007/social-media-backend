@@ -11,6 +11,7 @@ const otpGenerator = require("otp-generator");
 const nodemailer = require("nodemailer");
 const User = require("../models").User;
 const jwt = require("jsonwebtoken");
+
 const bcrypt = require("bcrypt");
 require("dotenv").config();
 

@@ -4,8 +4,14 @@ const User = require("./User");
 module.exports = (sequelize, DataTypes) => {
   class Follow extends Model {
     static associate(models) {
-      Follow.belongsTo(models.User, { foreignKey: "follower_id" });
-      Follow.belongsTo(models.User, { foreignKey: "following_id" });
+      Follow.belongsTo(models.User, {
+        foreignKey: "followerId",
+        as: "follower",
+      });
+      Follow.belongsTo(models.User, {
+        foreignKey: "followingId",
+        as: "following",
+      });
     }
   }
   Follow.init(
@@ -15,13 +21,17 @@ module.exports = (sequelize, DataTypes) => {
         primaryKey: true,
         autoIncrement: true,
       },
-      follower_id: {
+      followerId: {
         type: DataTypes.INTEGER,
         allowNull: false,
       },
-      following_id: {
+      followingId: {
         type: DataTypes.INTEGER,
         allowNull: false,
+      },
+      status: {
+        type: DataTypes.ENUM("pending", "accepted"),
+        defaultValue: "pending",
       },
     },
     {
