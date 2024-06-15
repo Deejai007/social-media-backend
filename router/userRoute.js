@@ -3,7 +3,7 @@ const router = express.Router();
 const authctrl = require("../controllers/userController");
 const { errorHandler } = require("../middleware/errorMiddleware");
 const { getAccessToRoute } = require("../middleware/auth");
-router.post("/", (req, res) => res.status(200).json({ msg: "User route" }));
+router.get("/", (req, res) => res.status(200).json({ msg: "User route" }));
 
 router.get("/getUser", getAccessToRoute, authctrl.getUser);
 

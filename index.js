@@ -4,11 +4,12 @@ const cors = require("cors");
 const app = express();
 require("dotenv").config();
 
+const path = require("path");
 var routes = require("./router/routes");
 var corsOptions = {
   origin: "http://localhost:8081", //frontend url
 };
-
+// const upload = require("../multerConfig");
 app.use(cors(corsOptions));
 
 app.use(express.json());

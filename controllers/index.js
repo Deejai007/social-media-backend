@@ -1,7 +1,9 @@
 const userController = require("./userController");
-const adminController = require("./adminController");
+const followController = require("./followController");
+const postController = require("./postController");
 
 module.exports = {
   userController,
   adminController,
+  followController,
 };

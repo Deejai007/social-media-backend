@@ -18,7 +18,6 @@ const followController = {
     const { followingId } = req.body;
     console.log(followingId);
     console.log(req.user);
-
     if (followingId == req.user.id) {
       return next(new CustomError("Cant follow yourself!", false, 401));
     }
@@ -65,6 +64,29 @@ const followController = {
       data: follow_db,
     });
   }),
+
+  // // ufollow user
+  // unfollowUser: asyncHandler(async (req, res, next) => {
+  //   const { followerId } = req.body;
+  //   console.log(followerId);
+
+  //   if (followerId == req.user.id) {
+  //     return next(new CustomError("Cant unfollow yourself!", false, 401));
+  //   }
+  //   let follow_db = await Follow.findOne({
+  //     where: { followerId: followerId, followingId: req.user.id },
+  //   });
+  //   if (!follow_db) {
+  //     return next(new CustomError("Error accepting request.1", false, 401));
+  //   }
+  //   let username=
+  //   await follow_db.destroy();
+  //   res.json({
+  //     success: true,
+  //     message: '',
+  //     data: follow_db,
+  //   });
+  // }),
   // follow user - decline request
   rejectFollowReq: asyncHandler(async (req, res, next) => {
     const { followerId } = req.body;
@@ -90,6 +112,7 @@ const followController = {
   getPendingRequests: asyncHandler(async (req, res, next) => {
     const pendingRequests = await Follow.findAll({
       where: { followingId: req.user.id, status: "pending" },
+
       include: [
         {
           model: User,
@@ -103,8 +126,52 @@ const followController = {
       ],
       attributes: [], // dont include any attributes of the model instance
       raw: true, //dont return instance of the model just return raw db object
+      order: [["createdAt", "DESC"]], // get latest at top
     });
     res.json({ success: true, message: "", data: pendingRequests });
+  }),
+
+  // unfollow user-handles both unfollowing and remove follow request sent to the some user
+  unfollowUser: asyncHandler(async (req, res, next) => {
+    const { followingId } = req.body;
+    console.log(followingId);
+
+    if (followingId == req.user.id) {
+      return next(new CustomError("Cant unfollow yourself!", false, 401));
+    }
+    let follow_db = await Follow.findOne({
+      where: { followerId: req.user.id, followingId: followingId },
+    });
+    if (!follow_db) {
+      return next(new CustomError("Error unfollowing user!", false, 401));
+    }
+
+    await follow_db.destroy();
+    res.json({
+      success: true,
+      message: "User Unfollowed!",
+    });
+  }),
+
+  // remove follower
+  removeFollower: asyncHandler(async (req, res, next) => {
+    const { followerId } = req.body;
+
+    if (followerId == req.user.id) {
+      return next(new CustomError("Cant remove yourself!", false, 401));
+    }
+    let follow_db = await Follow.findOne({
+      where: { followerId: followerId, followingId: req.user.id },
+    });
+    if (!follow_db) {
+      return next(new CustomError("Error removing follower!", false, 401));
+    }
+
+    await follow_db.destroy();
+    res.json({
+      success: true,
+      message: "Follower removed!",
+    });
   }),
 };
 module.exports = followController;
