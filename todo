@@ -25,6 +25,7 @@
 
 
 -jwt
-sequelize
+-sequelize
 -postgres db
-email verify using otp
+-email verify using otp
+-cloudinary imagedb

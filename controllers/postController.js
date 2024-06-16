@@ -14,12 +14,13 @@ const postController = {
   // get user data
   postUpload: asyncHandler(async (req, res, next) => {
     const { userId } = req.user.id;
-    const { content } = req.body;
+    let postData = req.body.postdata;
 
-    console.log("====================================");
-    console.log(req.files);
-    console.log("====================================");
+    // parse content into json
+    postData = JSON.parse(postData);
+    console.log(postData);
 
+    // make promise for upload image to cloudinary one by one
     const uploadPromises = req.files.map((file) => {
       return new Promise((resolve, reject) => {
         cloudinary.uploader.upload(file.path, (error, result) => {
@@ -35,17 +36,19 @@ const postController = {
         });
       });
     });
+    // get url be executing promisses
     const mediaUrls = await Promise.all(uploadPromises);
 
+    // create post row in Post table
     const newPost = await Post.create({
-      userId,
-      content,
+      userId: req.user.id,
+      content: postData.content,
       media: mediaUrls,
     });
 
     res
       .status(201)
-      .json({ success: true, user: newPost, msg: "Post uploaded" });
+      .json({ success: true, data: newPost, msg: "Post uploaded" });
   }),
 };
 module.exports = postController;
