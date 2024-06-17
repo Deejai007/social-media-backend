@@ -43,7 +43,6 @@ This repository contains the backend implementation of a social media clone buil
    m_password=nodemailer_app_password
    # jwt secret
    ACCESS_TOKEN_SECRET=_jwt_secret
-   RESET_PASSWORD_EXPIRE= 36000000
    # cloudinary
    cloudinary_cloudname=your_cloud_name
    cloudinary_apikey=your_api_key

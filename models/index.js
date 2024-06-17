@@ -4,22 +4,45 @@ const Sequelize = require("sequelize");
 const basename = path.basename(__filename);
 const dbConfig = require("../config/db.config.js");
 const db = {};
-let sequelize = new Sequelize(
-  process.env.DB_NAME,
-  process.env.DB_USER,
-  process.env.DB_PASS,
-  {
-    host: dbConfig.HOST,
-    dialect: dbConfig.dialect,
-    logging: false,
-    pool: {
-      max: dbConfig.pool.max,
-      min: dbConfig.pool.min,
-      acquire: dbConfig.pool.acquire,
-      idle: dbConfig.pool.idle,
-    },
+// let sequelize = new Sequelize(
+//   process.env.DB_NAME,
+//   process.env.DB_USER,
+//   process.env.DB_PASS,
+//   {
+//     host: dbConfig.HOST,
+//     dialect: dbConfig.dialect,
+//     logging: false,
+//     pool: {
+//       max: dbConfig.pool.max,
+//       min: dbConfig.pool.min,
+//       acquire: dbConfig.pool.acquire,
+//       idle: dbConfig.pool.idle,
+//     },
+//   }
+// );
+let sequelize = new Sequelize(process.env.SUPABASE_URI, {
+  dialect: dbConfig.dialect,
+  logging: false,
+  pool: {
+    max: dbConfig.pool.max,
+    min: dbConfig.pool.min,
+    acquire: dbConfig.pool.acquire,
+    idle: dbConfig.pool.idle,
+  },
+});
+
+// Test the connection
+async function testConnection() {
+  try {
+    await sequelize.authenticate();
+    console.log("Connection has been established successfully.");
+  } catch (error) {
+    console.error("Unable to connect to the database:", error);
   }
-);
+}
+
+testConnection();
+
 // Synchronize sequelize models with DB
 sequelize
   .sync({ alter: true })
