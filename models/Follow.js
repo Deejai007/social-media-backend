@@ -6,11 +6,11 @@ module.exports = (sequelize, DataTypes) => {
     static associate(models) {
       Follow.belongsTo(models.User, {
         foreignKey: "followerId",
-        as: "follower",
+        as: "followers",
       });
       Follow.belongsTo(models.User, {
         foreignKey: "followingId",
-        as: "following",
+        as: "followings",
       });
     }
   }

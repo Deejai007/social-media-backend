@@ -16,5 +16,6 @@ router.get(
   getAccessToRoute,
   followctrl.getPendingRequests
 );
-
+router.get("/followers", getAccessToRoute, followctrl.getFollowers);
+router.get("/followings", getAccessToRoute, followctrl.getFollowing);
 module.exports = router;

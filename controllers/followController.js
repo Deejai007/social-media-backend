@@ -116,7 +116,7 @@ const followController = {
       include: [
         {
           model: User,
-          as: "follower", // Assuming your User model is named 'User' and has an alias 'follower'
+          as: "followers", // Assuming your User model is named 'User' and has an alias 'follower'
           attributes: [
             "id",
             "username",
@@ -172,6 +172,36 @@ const followController = {
       success: true,
       message: "Follower removed!",
     });
+  }),
+  // get followers of a user
+  getFollowers: asyncHandler(async (req, res, next) => {
+    const userId = req.user.id;
+    const followers = await User.findAll({
+      include: {
+        model: Follow,
+        as: "followings",
+        where: { followingId: userId, status: "accepted" },
+        attributes: [],
+      },
+      attributes: ["id", "username", "profileImage"],
+    });
+    console.log(followers);
+    res.json({ success: true, data: followers, message: "" });
+  }),
+  // get user followed by a user
+  getFollowing: asyncHandler(async (req, res, next) => {
+    const userId = req.user.id;
+    const followings = await User.findAll({
+      include: {
+        model: Follow,
+        as: "followers",
+        where: { followerId: userId, status: "accepted" },
+        attributes: [],
+      },
+      attributes: ["id", "username", "profileImage"],
+    });
+    console.log(followings);
+    res.json({ success: true, data: followings, message: "" });
   }),
 };
 module.exports = followController;

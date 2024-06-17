@@ -3,11 +3,6 @@ const { Model } = require("sequelize");
 module.exports = (sequelize, DataTypes) => {
   class User extends Model {
     static associate(models) {
-      // company.hasMany(models.User, { as: "employees" });
-      User.belongsTo(models.Company, {
-        foreignKey: "companyId",
-        as: "company",
-      });
       User.hasOne(models.OtpModel, {
         foreignKey: "id",
       });
@@ -20,6 +15,7 @@ module.exports = (sequelize, DataTypes) => {
         as: "followings",
       });
       User.hasMany(models.Post, { foreignKey: "userId", as: "posts" });
+      User.hasMany(models.Like, { foreignKey: "userId", as: "likes" });
     }
   }
   User.init(

@@ -4,8 +4,11 @@ module.exports = (sequelize, DataTypes) => {
   class Post extends Model {
     static associate(models) {
       Post.belongsTo(models.User, { foreignKey: "userId", as: "post" });
-      // Post.belongsTo(models.User, { foreignKey: "id" });
-      // experience.belongsTo(models.Company, { foreignKey: "companyId" });
+      Post.hasMany(models.Like, {
+        foreignKey: "postId",
+        as: "likes",
+        onDelete: "CASCADE", //to delete associated likes if post is deleted
+      });
     }
   }
   Post.init(
@@ -22,6 +25,10 @@ module.exports = (sequelize, DataTypes) => {
       },
       media: {
         type: DataTypes.ARRAY(DataTypes.STRING),
+        allowNull: true,
+      },
+      location: {
+        type: DataTypes.STRING,
         allowNull: true,
       },
     },
