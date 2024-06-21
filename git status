@@ -1,0 +1,83 @@
+[33mcommit 1aca8f0edff009425a33774a6e8c7502a9d21407[m[33m ([m[1;36mHEAD -> [m[1;32mmaster[m[33m, [m[1;31morigin/master[m[33m)[m
+Author: Deepak Jain <deepakjain2k19@gmail.com>
+Date:   Mon Jun 17 21:33:32 2024 +0530
+
+    deployment
+
+[33mcommit dbc111b72b2fef0149413deb3d8b475240396e78[m
+Author: Deepak Jain <deepakjain2k19@gmail.com>
+Date:   Mon Jun 17 20:21:26 2024 +0530
+
+    added some post and follow route
+
+[33mcommit 867ed2b07704b4e8ef4f3e421d2fe1a69c6db9d2[m
+Author: Deepak Jain <deepakjain2k19@gmail.com>
+Date:   Sun Jun 16 12:42:24 2024 +0530
+
+    added post upload route
+
+[33mcommit 16ace2bbb9c221b25da34469cfc4a82085e26111[m
+Author: Deepak Jain <deepakjain2k19@gmail.com>
+Date:   Sun Jun 16 04:13:19 2024 +0530
+
+    setup cloudinary multer
+
+[33mcommit b17840c22ecbcca85f48d057f46986f5e0812f8c[m
+Author: Deepak Jain <deepakjain2k19@gmail.com>
+Date:   Wed Jun 12 02:57:09 2024 +0530
+
+    added follow routes
+
+[33mcommit a29913f048c1b0c62292048131f9fa93518d91ee[m
+Author: Deepak Jain <deepakjain2k19@gmail.com>
+Date:   Mon Jun 10 14:53:01 2024 +0530
+
+    added follow routes and model
+
+[33mcommit d99d7d011657be09dc26e3eb63210dd812bca7cc[m
+Author: Deepak Jain <deepakjain2k19@gmail.com>
+Date:   Wed Jun 5 02:34:43 2024 +0530
+
+    added company routes
+
+[33mcommit 0ec4bde56aaeb734194ae73db852b9f69a0cde9c[m
+Author: Deepak Jain <deepakjain2k19@gmail.com>
+Date:   Tue Jun 4 04:44:26 2024 +0530
+
+    added get user route and some company routes
+
+[33mcommit dd0749c7083718d01207752e3781e06ad2f34df5[m
+Author: Deepak Jain <deepakjain2k19@gmail.com>
+Date:   Wed May 29 23:38:27 2024 +0530
+
+    middleware statusbug solve
+
+[33mcommit b8340d34f23dc5857e840b619622dccea0293612[m
+Author: Deepak Jain <deepakjain2k19@gmail.com>
+Date:   Mon May 20 01:17:35 2024 +0530
+
+    setup custom error handler and middleware
+
+[33mcommit e6a6a2e0b5a2aea4b9a935abe1450a4670538be4[m
+Author: Deepak Jain <deepakjain2k19@gmail.com>
+Date:   Tue May 14 01:30:52 2024 +0530
+
+    added models
+
+[33mcommit 081d0e7ffe64b73fa20c419461c8af026aeda8b1[m
+Author: Deepak Jain <deepakjain2k19@gmail.com>
+Date:   Thu Apr 4 18:57:04 2024 +0530
+
+      final
+
+[33mcommit d6b35519443bc6ea3825f9c21cb2078ff4b2921b[m
+Author: Deepak Jain <deepakjain2k19@gmail.com>
+Date:   Sun Mar 17 21:26:43 2024 +0530
+
+    Add user login/signup/forgotpassword
+
+[33mcommit e2a1230efff6f4b09e028d3bc78cc8112f0fd9b3[m
+Author: Deepak Jain <deepakjain2k19@gmail.com>
+Date:   Thu Mar 14 01:39:37 2024 +0530
+
+    Models and files Init

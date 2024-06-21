@@ -7,10 +7,10 @@ This repository contains the backend implementation of a social media clone buil
 ## Features
 
 - **JWT Authentication**: Secure user authentication using JSON Web Tokens.
-- **PostgreSQL Database**: Reliable and scalable relational database management system.
+- **Supabase**:for cloud PostgreSQL database .
 - **Sequelize**: Promise-based Node.js ORM for PostgreSQL.
-- **Email Verification**: Verify user emails using OTP.
 - **Cloudinary Image Storage**: Store and manage images efficiently with Cloudinary.
+- **Email Verification**: Verify user emails using OTP.
 
 ---
 
@@ -34,9 +34,7 @@ This repository contains the backend implementation of a social media clone buil
 3. **Set up environment variables:**
 
    ```bash
-   DB_USER=pg_db_username
-   DB_PASS=pg_db_password
-   DB_NAME=pg_db_name
+   DATABASE_URL=your_db_url
    PORT=8967
    # nodemailer
    m_email=nodemailer_mail

@@ -285,7 +285,6 @@ const userController = {
     };
     const accesstoken = createAccessToken(userData);
     console.log();
-
     res.status(200).json({
       success: true,
       msg: "Login successful",
@@ -355,76 +354,6 @@ const userController = {
     });
   }),
 
-  // // forgot password- verify OTP
-  // forgotverify: asyncHandler(async (req, res, next) => {
-  //   const { email, otp } = req.body;
-  //   const user_db = await User.findOne({
-  //     where: {
-  //       email: email,
-  //     },
-  //   });
-  //   if (!user_db)
-  //     return next(
-  //       new CustomError("No user found! Please register first.", 400)
-  //     );
-  //   const userotp_db = await OtpModel.findOne({
-  //     where: {
-  //       email: email,
-  //     },
-  //   });
-  //   if (!userotp_db) return next(new CustomError("OTP timed out!", 400));
-  //   if (userotp_db.otp == otp) {
-  //     userotp_db.verify = true;
-  //     user_db.verified = true;
-  //     await userotp_db.save();
-  //     res.status(200).json({
-  //       success: true,
-  //       msg: "OTP user verified",
-  //     });
-  //   } else return next(new CustomError("OTP is incorrect", 400));
-  // }),
-  // // forgot password- reset password
-  // resetpass: asyncHandler(async (req, res, next) => {
-  //   console.log(req.route.path);
-  //   const { email, password } = req.body;
-  //   const user_db = await User.findOne({
-  //     where: {
-  //       email: email,
-  //     },
-  //   });
-  //   if (!user_db) throw new Error("No user found!");
-  //   const userotp_db = await OtpModel.findOne({
-  //     where: {
-  //       email: email,
-  //     },
-  //   });
-  //   if (!userotp_db)
-  //     return next(
-  //       new CustomError("OTP times out! Please resend otp to verify.", 400)
-  //     );
-  //   if (userotp_db.verify == true) {
-  //     const result = await bcrypt.compare(password, user_db.password);
-  //     if (result)
-  //       return next(
-  //         new CustomError("New password cannot be same as old password", 400)
-  //       );
-  //     // const passwordHash = await bcrypt.hash(password, 12);
-  //     const salt = await bcrypt.genSalt(12);
-  //     const hash = await bcrypt.hash(password, salt);
-  //     user_db.password = hash;
-  //     await user_db.save();
-  //     userotp_db.verify = false;
-  //     await userotp_db.save();
-
-  //     res.status(200).json({
-  //       success: true,
-  //       msg: "password changed successfully",
-  //     });
-  //   } else
-  //     return next(
-  //       new CustomError("OTP verification incomplete! Please try again.", 400)
-  //     );
-  // }),
   //  verifying OTP and resetting password
   forgotresetPassword: asyncHandler(async (req, res, next) => {
     const { email, otp, newPassword } = req.body;
