@@ -1,5 +1,5 @@
 const errorHandler = (err, req, res, next) => {
-  const statusCode = err.status || 500;
+  const statusCode = err.status || 400;
 
   // Set the status code to the error status or default to 500
   res.status(statusCode);

@@ -7,7 +7,7 @@ require("dotenv").config();
 const path = require("path");
 var routes = require("./router/routes");
 var corsOptions = {
-  origin: "http://localhost:8081", //frontend url
+  origin: "http://localhost:5173", //frontend url
 };
 // const upload = require("../multerConfig");
 app.use(cors(corsOptions));

@@ -4,7 +4,9 @@ const followctrl = require("../controllers/followController");
 const { errorHandler } = require("../middleware/errorMiddleware");
 const { getAccessToRoute } = require("../middleware/auth");
 
-router.post("/", (req, res) => res.status(200).json({ msg: "Follow route" }));
+router.post("/", (req, res) =>
+  res.status(200).json({ message: "Follow route" })
+);
 
 router.post("/sendreq", getAccessToRoute, followctrl.sendFollowReq);
 router.post("/acceptreq", getAccessToRoute, followctrl.acceptFollowReq);

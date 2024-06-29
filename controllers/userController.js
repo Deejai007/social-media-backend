@@ -1,5 +1,6 @@
 const { check, validationResult } = require("express-validator");
 const CustomError = require("../helpers/customError");
+const { body } = require("express-validator");
 const {
   getUserDataFromToken,
   createAccessToken,
@@ -39,7 +40,12 @@ const userController = {
 
   // new user register
   register: asyncHandler(async (req, res, next) => {
-    let { username, email, password, firstName, lastName } = req.body;
+    // let { username, email, password, firstName, lastName } = req.body;
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return next(new CustomError(errors.array()[0].message, false, 400));
+    }
+    let { email, password } = req.body;
     email = email.toLowerCase();
     const userCount = await User.count({
       where: {
@@ -47,76 +53,37 @@ const userController = {
       },
     });
     if (!userCount) {
-      const usernameCheck = await User.count({
-        where: {
-          username: username,
+      const salt = await bcrypt.genSalt(12);
+      const hash = await bcrypt.hash(password, salt);
+      const user = await User.create({
+        email,
+        password: hash,
+      });
+
+      const userData = {
+        id: user_db.id,
+        username: user_db.firstName,
+        email: user_db.email,
+        verified: user_db.verified,
+      };
+      const accesstoken = createAccessToken(userData);
+      console.log();
+      res.status(200).json({
+        success: true,
+        message: "Registration successful",
+        data: {
+          accesstoken,
+          user: user_db,
         },
       });
-      if (!usernameCheck) {
-        const salt = await bcrypt.genSalt(12);
-        const hash = await bcrypt.hash(password, salt);
-        const user = await User.create({
-          username,
-          email,
-          password: hash,
-          firstName,
-          lastName,
-        });
-        const otp_gen = otpGenerator.generate(6, {
-          upperCaseAlphabets: false,
-          specialChars: false,
-          lowerCaseAlphabets: false,
-        });
-        const opt = await OtpModel.create({
-          email,
-          otp: otp_gen,
-        });
-        const mailoptions = {
-          from: process.env.m_email,
-          to: email,
-          subject: `${process.env.pro_name} Verification OTP`,
-          html: `
-                    <divz
-                        class="container"
-                        style="max-width: 90%; margin: auto; padding-top: 20px"
-                    >
-                        <h2>Dear ${firstName}</h2>
-                        <h4>You are About to be a Member </h4>
-                        <p style="margin-bottom: 30px;"> To complete the registration process, please use the following OTP to verify your email address:</p>
-                        <h1 style="font-size: 40px; letter-spacing: 2px; text-align:center;">${otp_gen}</h1>
-                    </divz>
-                `,
-        };
-        transporter.sendMail(mailoptions, (err, info) => {
-          if (err) {
-            console.log(err);
-
-            return next(
-              new CustomError(
-                "There was an error sending OTP to email for verification!",
-                500
-              )
-            );
-          } else {
-            console.log("Mail sent");
-          }
-        });
-        res.status(200).json({
-          success: true,
-          user: user.toJSON(),
-          msg: "OTP sent to  email!",
-        });
-      } else {
-        return next(
-          new CustomError(
-            "This username is not available.Please choose new username!",
-            false,
-            400
-          )
-        );
-      }
     } else {
-      return next(new CustomError("User with this exist", false, 400));
+      return next(
+        new CustomError(
+          "This email is already registered.Please login!",
+          false,
+          400
+        )
+      );
     }
   }),
 
@@ -132,27 +99,21 @@ const userController = {
 
     const otp_db = await OtpModel.findOne({
       where: {
-        email: email,
+        userEmail: email,
       },
     });
 
     if (!user_db) {
-      // return res.status(400).json({ success: false, msg: "User not found!" });
       return next(new CustomError("User not found!", 400));
     }
 
     if (user_db.verified) {
       return res
         .status(200)
-
-        .json({ success: true, msg: "User already verified!" });
-      // return next(new CustomError("User already verified!", 400));
+        .json({ success: true, message: "User already verified!" });
     }
 
     if (!otp_db) {
-      // return res
-      //   .status(400)
-      //   .json({ success: false, msg: "OTP timed out. Please resend OTP!" });
       return next(new CustomError("OTP timed out. Please resend OTP!", 400));
     }
 
@@ -164,7 +125,7 @@ const userController = {
       const mailoptions = {
         from: process.env.m_email,
         to: email,
-        subject: `Dear Customer, sign up to your ${process.env.pro_name} account is successful!`,
+        subject: `Email verification- ${process.env.pro_name} !`,
         html: `
           <div class="container" style="max-width: 90%; margin: auto; padding-top: 20px;">
             <h2>Welcome to the club. ${user_db.firstName}</h2>
@@ -183,10 +144,9 @@ const userController = {
       });
 
       // const accessToken = createAccessToken({ id: user_db._id });
-
       res.status(200).json({
         success: true,
-        msg: "User verified",
+        message: "User verified",
         id: user_db._id,
         // accessToken,
       });
@@ -208,7 +168,7 @@ const userController = {
       return next(new CustomError("User already verified!", true, 200));
     const otp_db = await OtpModel.findOne({
       where: {
-        email: email,
+        userEemail: email,
       },
     });
     const new_otp = otpGenerator.generate(6, {
@@ -217,7 +177,10 @@ const userController = {
       lowerCaseAlphabets: false,
     });
     if (!otp_db) {
-      const new_otp_db = await OtpModel.create({ email, otp: new_otp });
+      const new_otp_db = await OtpModel.create({
+        userEmail: email,
+        otp: new_otp,
+      });
     } else {
       otp_db.otp = new_otp;
       await otp_db.save();
@@ -250,7 +213,7 @@ const userController = {
     });
     res.status(200).json({
       success: true,
-      msg: "mail sent",
+      message: "mail sent",
     });
   }),
 
@@ -282,14 +245,17 @@ const userController = {
       id: user_db.id,
       username: user_db.firstName,
       email: user_db.email,
+      verified: user_db.verified,
     };
     const accesstoken = createAccessToken(userData);
     console.log();
     res.status(200).json({
       success: true,
-      msg: "Login successful",
-      accesstoken,
-      id: user_db.id,
+      message: "Login successful",
+      data: {
+        accesstoken,
+        user: user_db,
+      },
     });
   }),
   // forgot password- send OTP
@@ -306,7 +272,7 @@ const userController = {
       );
     const otp_db = await OtpModel.findOne({
       where: {
-        email: email,
+        userEmail: email,
       },
     });
     const new_otp = otpGenerator.generate(6, {
@@ -315,7 +281,10 @@ const userController = {
       lowerCaseAlphabets: false,
     });
     if (!otp_db) {
-      const new_otp_db = await OtpModel.create({ email, otp: new_otp });
+      const new_otp_db = await OtpModel.create({
+        userEmail: email,
+        otp: new_otp,
+      });
     } else {
       otp_db.otp = new_otp;
       otp_db.verified = false;
@@ -349,7 +318,7 @@ const userController = {
 
     res.status(200).json({
       success: true,
-      msg: "OTP sent to email!",
+      message: "OTP sent to email!",
       id: user_db._id,
     });
   }),
@@ -366,7 +335,7 @@ const userController = {
       );
     }
 
-    const userOtp = await OtpModel.findOne({ where: { email } });
+    const userOtp = await OtpModel.findOne({ where: { userEmail: email } });
     if (!userOtp || !newPassword) {
       return next(
         new CustomError("Error Occured! Please try again", false, 400)
@@ -384,9 +353,7 @@ const userController = {
     }
 
     if (userOtp.verify) {
-      return next(
-        new CustomError("OTP already verified! Please resend OTP ", true, 200)
-      );
+      return next(new CustomError("Please resend otp.", true, 200));
     }
 
     const salt = await bcrypt.genSalt(12);
@@ -410,15 +377,7 @@ const userController = {
 
     return res
       .status(200)
-      .json({ success: true, msg: "Password reset successful." });
-    // } catch (error) {
-    //   console.log("====================================");
-    //   console.log(error);
-    //   console.log("====================================");
-    //   // console.log(error);
-
-    //   return next(new CustomError(error, false, 500));
-    // }
+      .json({ success: true, message: "Password reset successful." });
   }),
 };
 module.exports = userController;

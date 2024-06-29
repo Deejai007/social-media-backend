@@ -3,9 +3,10 @@ const { Model } = require("sequelize");
 module.exports = (sequelize, DataTypes) => {
   class OtpModel extends Model {
     static associate(models) {
-      // Company.hasMany(models.User, { as: "employees" });
       OtpModel.belongsTo(models.User, {
-        foreignKey: "id",
+        foreignKey: "userEmail",
+        targetKey: "email",
+        as: "user",
       });
     }
   }
@@ -16,7 +17,7 @@ module.exports = (sequelize, DataTypes) => {
         primaryKey: true,
         autoIncrement: true,
       },
-      email: {
+      userEmail: {
         type: DataTypes.STRING,
         allowNull: false,
         validate: {
@@ -30,7 +31,7 @@ module.exports = (sequelize, DataTypes) => {
       otp: {
         type: DataTypes.STRING,
         // allowNull: false,
-        // validate: { len: [4, 4] },
+        validate: { len: [6, 6] },
       },
     },
     {

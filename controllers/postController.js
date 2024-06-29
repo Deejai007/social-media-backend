@@ -47,7 +47,7 @@ const postController = {
 
     res
       .status(201)
-      .json({ success: true, data: newPost, msg: "Post uploaded" });
+      .json({ success: true, data: newPost, message: "Post uploaded" });
   }),
 
   // get single post
@@ -62,7 +62,7 @@ const postController = {
     });
     const postData = post.toJSON();
     postData.likes = likes;
-    res.status(201).json({ success: true, data: postData, msg: "success" });
+    res.status(201).json({ success: true, data: postData, message: "success" });
   }),
 
   // delete post
@@ -83,14 +83,14 @@ const postController = {
     await post.destroy();
     res
       .status(200)
-      .json({ success: true, data: "", msg: "Post deleted successfully" });
+      .json({ success: true, data: "", message: "Post deleted successfully" });
   }),
   likePost: asyncHandler(async (req, res, next) => {
     const like = await Like.create({
       userId: req.user.id,
       postId: req.body.postId,
     });
-    res.status(201).json({ success: true, data: "", msg: "Liked post" });
+    res.status(201).json({ success: true, data: "", message: "Liked post" });
   }),
   unlikePost: asyncHandler(async (req, res, next) => {
     const like_db = await Like.findOne({
@@ -101,7 +101,11 @@ const postController = {
       await like_db.destroy();
       res
         .status(201)
-        .json({ success: true, data: "", msg: "Post unliked successfully" });
+        .json({
+          success: true,
+          data: "",
+          message: "Post unliked successfully",
+        });
     } else {
       return next(new CustomError("Like not found", false, 404));
     }
