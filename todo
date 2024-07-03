@@ -6,34 +6,16 @@
 -google auth
 -error page
 -serializers
+-veriffied and unverified access in verify route
 
+@
+@@
+@
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
--jwt
--sequelize
--postgres db
--email verify using otp
--cloudinary imagedb
+- -jwt
+  -sequelize
+  -postgres db
+  -email verify using otp
+  -cloudinary imagedb
+  -axios custom configuration
+  -custom error

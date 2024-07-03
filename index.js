@@ -3,7 +3,7 @@ const express = require("express");
 const cors = require("cors");
 const app = express();
 require("dotenv").config();
-
+const cookieParser = require("cookie-parser");
 const path = require("path");
 var routes = require("./router/routes");
 var corsOptions = {
@@ -13,6 +13,8 @@ var corsOptions = {
 app.use(cors(corsOptions));
 
 app.use(express.json());
+
+app.use(cookieParser());
 
 app.use(express.urlencoded({ extended: true }));
 

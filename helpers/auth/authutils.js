@@ -7,21 +7,15 @@ const secretKey = process.env.ACCESS_TOKEN_SECRET;
 // create access token
 function createAccessToken(userData) {
   return jwt.sign(userData, process.env.ACCESS_TOKEN_SECRET, {
-    expiresIn: "1d",
+    expiresIn: "1w",
   });
 }
 
 //  decode access token
-function getUserDataFromToken(authorizationHeader) {
+function getUserDataFromToken(token) {
   try {
-    if (!authorizationHeader) {
-      console.error("Authorization header is missing");
-      return null;
-    }
-
-    const token = authorizationHeader.split(" ")[1];
     if (!token) {
-      console.error("Token is missing in Authorization header");
+      console.error("Authorization header is missing");
       return null;
     }
 

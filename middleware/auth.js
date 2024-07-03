@@ -1,7 +1,8 @@
 const jwt = require("jsonwebtoken");
 const getAccessToRoute = (req, res, next) => {
   try {
-    let token = req.header("Authorization");
+    // let token = req.header("Authorization");
+    let token = req.cookies.token;
     console.log(token);
     if (!token)
       return res.status(401).json({ message: "Please login to continue!" });
@@ -23,6 +24,7 @@ const getAccessToRoute = (req, res, next) => {
     return res.status(500).json({ message: err.message });
   }
 };
+
 const getUnverifiedAccessToRoute = (req, res, next) => {
   try {
     let token = req.header("Authorization");

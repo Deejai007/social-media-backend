@@ -60,6 +60,12 @@ module.exports = (sequelize, DataTypes) => {
       location: {
         type: DataTypes.STRING,
       },
+      resetPasswordToken: {
+        type: DataTypes.STRING,
+      },
+      resetPasswordExpires: {
+        type: DataTypes.DATE,
+      },
     },
     {
       sequelize,
