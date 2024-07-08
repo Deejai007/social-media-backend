@@ -25,7 +25,10 @@ const forgotPasswordValidator = [
   body("email").isEmail().withMessage("Enter a valid email"),
 ];
 const forgotResetPasswordValidator = [
-  body("email").isEmail().withMessage("Enter a valid email"),
+  body("token")
+    .isLength({ min: 40, max: 40 })
+    .matches(/^[a-f0-9]{40}$/i)
+    .withMessage("Invalid token format"),
   body("newPassword")
     .isLength({ min: 5, max: 100 })
     .withMessage("Password must be between 6 and 100 characters"),
@@ -33,9 +36,8 @@ const forgotResetPasswordValidator = [
 
 router.get("/", (req, res) => res.status(200).json({ message: "User route" }));
 
-router.get("/getUser", getAccessToRoute, authctrl.getUser);
+router.get("/getuser/:username", getAccessToRoute, authctrl.getUser);
 
-//  router.post("/test", authctrl.test);
 router.post("/register", registerValidator, authctrl.register);
 
 router.post("/verify", verifyValidator, authctrl.verify);
@@ -47,8 +49,11 @@ router.post(
   forgotPasswordValidator,
   authctrl.forgotpassword
 );
-// router.post("/forgot/verify", authctrl.forgotverify);
-// router.post("/forgot/reset", authctrl.resetpass);
-// combined into below
-router.post("/forgotresetpassword/:token", authctrl.forgotresetPassword);
+
+router.post(
+  "/forgotresetpassword",
+  forgotResetPasswordValidator,
+  authctrl.forgotresetPassword
+);
+router.post("/adduserdata", getAccessToRoute, authctrl.addUserData);
 module.exports = router;

@@ -8,13 +8,13 @@ const path = require("path");
 var routes = require("./router/routes");
 var corsOptions = {
   origin: "http://localhost:5173", //frontend url
+  credentials: true, // Allow credentials (cookies)
 };
 // const upload = require("../multerConfig");
 app.use(cors(corsOptions));
+app.use(cookieParser());
 
 app.use(express.json());
-
-app.use(cookieParser());
 
 app.use(express.urlencoded({ extended: true }));
 

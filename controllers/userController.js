@@ -27,14 +27,59 @@ const transporter = nodemailer.createTransport({
 const userController = {
   // get user data
   getUser: asyncHandler(async (req, res, next) => {
-    const userData = getUserDataFromToken(req.cookies.token);
-    console.log(userData);
-    if (!userData) return next(new CustomError("Not authorized", false, 401));
-    const user_db = await User.findOne({ id: userData.id });
+    // const userData = getUserDataFromToken(req.cookies.token);
+    // console.log(userData);
+    // if (!userData) return next(new CustomError("Not authorized", false, 401));
+    // const user_db = await User.findOne({ id: userData.id });
+    // if (!user_db) {
+    //   return res.status(404).json({ message: "User not found" });
+    // }
+    // res.status(200).json({ success: true, data: user_db });
+    let username = req.params.username;
+
+    if (!username) {
+      return next(new CustomError("Unable to fetch data", false, 401));
+    }
+    const user_db = await User.findOne({ where: { username: username } });
+    if (!user_db) {
+      return next(new CustomError("Unable to fetch data", false, 401));
+    }
+    res.status(200).json({ success: true, data: { user: user_db } });
+  }),
+  // add user data
+  addUserData: asyncHandler(async (req, res, next) => {
+    const userData = req.user;
+    if (!userData) return next(new CustomError("Not authorized1", false, 401));
+    console.log(req.body.formData);
+    const { formData } = req.body;
+    if (!formData) return next(new CustomError("Not authorized2", false, 401));
+
+    const usernameCheck = await User.findOne({
+      where: { username: formData.username },
+    });
+    console.log(usernameCheck);
+    if (usernameCheck) {
+      return next(
+        new CustomError(
+          "Username is already taken. Choose a different username",
+          false,
+          401
+        )
+      );
+    }
+    const user_db = await User.findOne({ where: { id: userData.id } });
+
     if (!user_db) {
       return res.status(404).json({ message: "User not found" });
     }
-    res.status(200).json({ success: true, data: user_db });
+
+    await user_db.update(formData);
+
+    res.status(200).json({
+      success: true,
+      message: "Profile created successfully!",
+      data: user_db,
+    });
   }),
   // new user register
   register: asyncHandler(async (req, res, next) => {
@@ -95,7 +140,7 @@ const userController = {
     } else {
       return next(
         new CustomError(
-          "This email is already registered.Please login!",
+          "A user with this email already exists. Please login!",
           false,
           400
         )
@@ -160,6 +205,20 @@ const userController = {
           console.log("Mail sent");
         }
       });
+      // send updated access token after verification
+      const userData = {
+        id: user_db.id,
+        username: null,
+        email: user_db.email,
+        verified: user_db.verified,
+      };
+      const accesstoken = createAccessToken(userData);
+
+      res.cookie("token", accesstoken, {
+        httpOnly: true,
+        secure: process.env.production == "false",
+        // sameSite: 'Strict',
+      });
 
       res.status(200).json({
         success: true,
@@ -181,7 +240,10 @@ const userController = {
         email: email,
       },
     });
-    if (!user_db) return next(new CustomError("No user found!", false, 400));
+    if (!user_db)
+      return next(
+        new CustomError("An error occured! Please login again.", false, 400)
+      );
     if (user_db.verified)
       return next(new CustomError("User already verified!", true, 200));
     const otp_db = await OtpModel.findOne({
@@ -203,6 +265,7 @@ const userController = {
       otp_db.otp = new_otp;
       await otp_db.save();
     }
+    console.log(new_otp);
 
     const mailoptions = {
       from: process.env.m_email,
@@ -250,10 +313,6 @@ const userController = {
     if (!user_db || !password) {
       return next(new CustomError("Invalid Credentials", false, 401));
     }
-    if (!user_db.verified)
-      return next(
-        new CustomError("User Not Verified! Pleae verify first", false, 403)
-      );
 
     console.log(password);
     console.log(user_db.password);
@@ -270,8 +329,8 @@ const userController = {
     const accesstoken = createAccessToken(userData);
     res.cookie("token", accesstoken, {
       httpOnly: true,
-      secure: process.env.production == "false",
-      // sameSite: 'Strict',
+      secure: false,
+      sameSite: "Lax",
     });
     console.log();
     res.status(200).json({
@@ -302,7 +361,7 @@ const userController = {
     if (user_db.resetPasswordExpires > Date.now()) {
       return next(
         new CustomError(
-          "Email is already sent!If not received, try again after some time!",
+          "Email is already sent! If not received, try again after some time!",
           false,
           400
         )
@@ -319,7 +378,7 @@ const userController = {
       subject: "Password reset request.",
       text: `You are receiving this because you have requested the reset of the password for your account.\n\n
       Please click on the following link, or paste this into your browser to complete the process:\n\n
-      ${process.env.CLIENT_URL}/reset-password/${token}\n\n
+      ${process.env.CLIENT_URL}/password-reset/${token} \n\n
       If you did not request this, please ignore this email and your password will remain unchanged.\n`,
     };
 
@@ -347,8 +406,7 @@ const userController = {
       return next(new CustomError(errors.array()[0].msg, false, 400));
     }
 
-    const token = req.params.token;
-    const { newPassword } = req.body;
+    const { token, newPassword } = req.body;
 
     const user_db = await User.findOne({
       where: { resetPasswordToken: token },
@@ -362,6 +420,7 @@ const userController = {
         )
       );
     }
+    console.log(user_db.email);
     if (!token || token !== user_db.resetPasswordToken) {
       return next(
         new CustomError(
@@ -383,7 +442,7 @@ const userController = {
     const salt = await bcrypt.genSalt(12);
     const hash = await bcrypt.hash(newPassword, salt);
     // const isSamePassword = await bcrypt.compare(hash, user.password);
-    const isSamePassword = newPassword == user.password;
+    const isSamePassword = newPassword == user_db.password;
     if (isSamePassword) {
       return next(
         new CustomError(

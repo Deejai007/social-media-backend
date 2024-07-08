@@ -18,9 +18,17 @@ function getUserDataFromToken(token) {
       console.error("Authorization header is missing");
       return null;
     }
+    jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, user) => {
+      if (err)
+        return res
+          .status(402)
+          .json({ message: "Invalid Authentication token" });
 
-    const decoded = jwt.verify(token, secretKey);
-    return decoded; // decoded contains user data
+      console.log("h3", user);
+      return user;
+    });
+    // const decoded = jwt.verify(token, secretKey);
+    // return decoded; // decoded contains user data
   } catch (err) {
     console.error("Token validation failed:", err);
     return null;

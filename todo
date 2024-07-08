@@ -7,6 +7,8 @@
 -error page
 -serializers
 -veriffied and unverified access in verify route
+-docker
+-interactively check if username is unique
 
 @
 @@
