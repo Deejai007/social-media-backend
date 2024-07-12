@@ -1,15 +1,15 @@
-const { check, validationResult } = require("express-validator");
+// const { check, validationResult } = require("express-validator");
 const CustomError = require("../helpers/customError");
-const { getUserDataFromToken } = require("../helpers/auth/authutils");
+// const { getUserDataFromToken } = require("../helpers/auth/authutils");
 // const { errorHandler } = require("../middleware/errorMiddleware");
 const asyncHandler = require("express-async-handler");
-const OtpModel = require("../models").OtpModel;
-const otpGenerator = require("otp-generator");
-const nodemailer = require("nodemailer");
+// const OtpModel = require("../models").OtpModel;
+// const otpGenerator = require("otp-generator");
+// const nodemailer = require("nodemailer");
 const { User, Follow } = require("../models");
-const jwt = require("jsonwebtoken");
-const bcrypt = require("bcrypt");
-const { raw } = require("express");
+// const jwt = require("jsonwebtoken");
+// const bcrypt = require("bcrypt");
+// const { raw } = require("express");
 require("dotenv").config();
 
 const followController = {

@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const followctrl = require("../controllers/followController");
-const { errorHandler } = require("../middleware/errorMiddleware");
+// const { errorHandler } = require("../middleware/errorMiddleware");
 const { getAccessToRoute } = require("../middleware/auth");
 
 router.post("/", (req, res) =>

@@ -2,7 +2,6 @@ const CustomError = require("../helpers/customError");
 
 const asyncHandler = require("express-async-handler");
 const fs = require("fs");
-// const cloudinary = require("cloudinary").v2;
 const cloudinary = require("../config/cloudinary");
 const { User, Post, Like } = require("../models");
 

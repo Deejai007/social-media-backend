@@ -1,8 +1,8 @@
-const { check, validationResult } = require("express-validator");
+// const { check, validationResult } = require("express-validator");
 const CustomError = require("../helpers/customError");
-const { body } = require("express-validator");
+// const { body } = require("express-validator");
 const {
-  getUserDataFromToken,
+  // getUserDataFromToken,
   createAccessToken,
 } = require("../helpers/auth/authutils");
 const asyncHandler = require("express-async-handler");
@@ -12,7 +12,7 @@ const { OtpModel, User, Follow } = require("../models");
 const otpGenerator = require("otp-generator");
 const nodemailer = require("nodemailer");
 // const User = require("../models").User;
-const jwt = require("jsonwebtoken");
+// const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 const crypto = require("crypto");
 require("dotenv").config();
