@@ -43,6 +43,14 @@ module.exports = (sequelize, DataTypes) => {
           isEmail: true,
         },
       },
+      followerCount: {
+        type: DataTypes.INTEGER,
+        defaultValue: 0,
+      },
+      followingCount: {
+        type: DataTypes.INTEGER,
+        defaultValue: 0,
+      },
       password: {
         type: DataTypes.STRING,
         allowNull: false,
@@ -57,6 +65,7 @@ module.exports = (sequelize, DataTypes) => {
       bio: {
         type: DataTypes.STRING,
       },
+
       location: {
         type: DataTypes.STRING,
       },

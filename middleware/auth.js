@@ -1,16 +1,16 @@
 const jwt = require("jsonwebtoken");
 const getAccessToRoute = (req, res, next) => {
   try {
-    console.log("h1", req.cookies);
+    // console.log("h1", req.cookies);
     let token = req.cookies.token;
-    console.log("h2", token);
+    // console.log("h2", token);
     if (!token)
       return res
         .status(401)
         .json({ message: "Please login first to continue!" });
     // token = token.replace(/^Bearer\s+/, "");
     jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, user) => {
-      console.log(user);
+      // console.log(user);
       if (user.verified == false) {
         return res
           .status(402)
@@ -21,13 +21,12 @@ const getAccessToRoute = (req, res, next) => {
           .status(402)
           .json({ message: "Invalid Authentication token" });
 
-      console.log("h3", user);
+      // console.log("h3", user);
       req.user = user;
       next();
     });
   } catch (err) {
     console.log("++++++++++++++++++++++++");
-
     console.log(err);
     return res.status(500).json({ message: err.message });
   }

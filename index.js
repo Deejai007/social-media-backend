@@ -6,8 +6,22 @@ require("dotenv").config();
 const cookieParser = require("cookie-parser");
 const path = require("path");
 var routes = require("./router/routes");
-var corsOptions = {
-  origin: "http://localhost:5173", //frontend url
+
+const allowedOrigins = [
+  "http://localhost:5173", // local
+  "https://treiwo.netlify.app/", // Netlify
+];
+
+const corsOptions = {
+  origin: function (origin, callback) {
+    console.log(origin);
+    // Check if the origin is in the allowedOrigins array or if there is no origin (for non-browser requests)
+    if (allowedOrigins.includes(origin) || !origin) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
   credentials: true, // Allow credentials (cookies)
 };
 // const upload = require("../multerConfig");

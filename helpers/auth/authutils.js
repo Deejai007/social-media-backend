@@ -24,7 +24,7 @@ function getUserDataFromToken(token) {
           .status(402)
           .json({ message: "Invalid Authentication token" });
 
-      console.log("h3", user);
+      // console.log("h3", user);
       return user;
     });
     // const decoded = jwt.verify(token, secretKey);

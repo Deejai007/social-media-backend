@@ -1,16 +1,18 @@
 const { check, validationResult } = require("express-validator");
 const CustomError = require("../helpers/customError");
-const { body } = require("express-validator");
+// const { body } = require("express-validator");
 const {
-  getUserDataFromToken,
+  // getUserDataFromToken,
   createAccessToken,
 } = require("../helpers/auth/authutils");
 const asyncHandler = require("express-async-handler");
-const OtpModel = require("../models").OtpModel;
+const { OtpModel, User, Follow } = require("../models");
+// const OtpModel = require("../models").OtpModel;
+// const OtpModel = require("../models").Follow;
 const otpGenerator = require("otp-generator");
 const nodemailer = require("nodemailer");
-const User = require("../models").User;
-const jwt = require("jsonwebtoken");
+// const User = require("../models").User;
+// const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 const crypto = require("crypto");
 require("dotenv").config();
@@ -27,14 +29,6 @@ const transporter = nodemailer.createTransport({
 const userController = {
   // get user data
   getUser: asyncHandler(async (req, res, next) => {
-    // const userData = getUserDataFromToken(req.cookies.token);
-    // console.log(userData);
-    // if (!userData) return next(new CustomError("Not authorized", false, 401));
-    // const user_db = await User.findOne({ id: userData.id });
-    // if (!user_db) {
-    //   return res.status(404).json({ message: "User not found" });
-    // }
-    // res.status(200).json({ success: true, data: user_db });
     let username = req.params.username;
 
     if (!username) {
@@ -44,8 +38,17 @@ const userController = {
     if (!user_db) {
       return next(new CustomError("Unable to fetch data", false, 401));
     }
-    res.status(200).json({ success: true, data: { user: user_db } });
+    const isFollowing = await Follow.count({
+      where: {
+        followerId: req.user.id,
+        followingId: user_db.id,
+      },
+    });
+    res
+      .status(200)
+      .json({ success: true, data: { user: user_db, isFollowing } });
   }),
+
   // add user data
   addUserData: asyncHandler(async (req, res, next) => {
     const userData = req.user;
