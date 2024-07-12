@@ -1,8 +1,5 @@
 const CustomError = require("../helpers/customError");
-const {
-  getUserDataFromToken,
-  createAccessToken,
-} = require("../helpers/auth/authutils");
+
 const asyncHandler = require("express-async-handler");
 const fs = require("fs");
 // const cloudinary = require("cloudinary").v2;
@@ -13,53 +10,84 @@ const postController = {
   // get user data
   uploadPost: asyncHandler(async (req, res, next) => {
     const { userId } = req.user.id;
-    let postData = req.body.postdata;
+    let formData = req.body;
 
     // parse content into json
-    postData = JSON.parse(postData);
-    console.log(postData);
 
-    // make promise for upload image to cloudinary one by one
-    const uploadPromises = req.files.map((file) => {
-      return new Promise((resolve, reject) => {
-        cloudinary.uploader.upload(file.path, (error, result) => {
-          if (error) {
-            reject(error);
-          } else {
-            console.log("image upload", result.secure_url);
+    console.log(formData);
+    const imageFile = req.files[0];
 
-            // Remove the file from the server  after uploading
-            fs.unlinkSync(file.path);
-            resolve(result.secure_url);
-          }
-        });
+    // let postData = JSON.parse(postData);
+    // console.log(postData);
+    const result = await new Promise((resolve, reject) => {
+      cloudinary.uploader.upload(imageFile.path, (error, result) => {
+        if (error) {
+          reject(error);
+        } else {
+          console.log("Image uploaded:", result.secure_url);
+
+          // Remove the file from the server after uploading
+          fs.unlinkSync(imageFile.path);
+          resolve(result.secure_url);
+        }
       });
     });
-    // get url be executing promisses
-    const mediaUrls = await Promise.all(uploadPromises);
+    console.log(result);
+    const mediaUrl = result;
 
     // create new post row
     const newPost = await Post.create({
       userId: req.user.id,
-      content: postData.content,
-      media: mediaUrls,
+      caption: formData.caption,
+      location: formData.location,
+      media: mediaUrl,
     });
 
     res
       .status(201)
-      .json({ success: true, data: newPost, message: "Post uploaded" });
+      .json({ success: true, postId: newPost.id, message: "Post uploaded" });
   }),
 
   // get single post
-  getPost: asyncHandler(async (req, res, next) => {
-    if (!req.params.postid) {
+  getSinglePost: asyncHandler(async (req, res, next) => {
+    if (!req.params.postId) {
       if (!post) return next(new CustomError("Post not found!", false, 400));
     }
-    const post = await Post.findByPk(req.params.postid);
+
+    const post = await Post.findOne({
+      where: { id: req.params.postId },
+      include: {
+        model: User,
+        as: "post",
+        attributes: ["username", "profileImage"],
+      },
+    });
     if (!post) return next(new CustomError("Post not found!", false, 400));
     const likes = await Like.count({
       where: { userId: req.user.id, postId: post.id },
     });
+    let isLikedByUser = await Like.count({
+      where: { userId: req.user.id, postId: post.id },
+    });
+    const postData = post.toJSON();
+    postData.likes = likes;
+    postData.username = postData.post.username;
+    postData.profileImage = postData.post.profileImage;
+    postData.isLikedByUser = isLikedByUser;
+    console.log(postData);
+    res.status(201).json({ success: true, data: postData, message: "success" });
+  }),
+  // get user posts
+  getPosts: asyncHandler(async (req, res, next) => {
+    const { userId } = req.body.id;
+    if (!userId) {
+      return next(new CustomError("Error fetching posts!", false, 400));
+    }
+    const posts = await Post.findAll({
+      where: { userId: userId },
+      attributes: { exclude: ["location", "updatedAt"] },
+    });
+    console.log(posts);
     const postData = post.toJSON();
     postData.likes = likes;
     res.status(201).json({ success: true, data: postData, message: "success" });
@@ -99,13 +127,11 @@ const postController = {
 
     if (like_db) {
       await like_db.destroy();
-      res
-        .status(201)
-        .json({
-          success: true,
-          data: "",
-          message: "Post unliked successfully",
-        });
+      res.status(201).json({
+        success: true,
+        data: "",
+        message: "Post unliked successfully",
+      });
     } else {
       return next(new CustomError("Like not found", false, 404));
     }

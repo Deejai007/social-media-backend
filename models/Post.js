@@ -18,13 +18,13 @@ module.exports = (sequelize, DataTypes) => {
         primaryKey: true,
         autoIncrement: true,
       },
-      content: {
+      caption: {
         type: DataTypes.TEXT,
         allowNull: true,
         trim: true,
       },
       media: {
-        type: DataTypes.ARRAY(DataTypes.STRING),
+        type: DataTypes.STRING,
         allowNull: true,
       },
       location: {

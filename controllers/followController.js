@@ -56,6 +56,19 @@ const followController = {
     if (!follow_db) {
       return next(new CustomError("Error accepting request.1", false, 401));
     }
+    const user1_db = await User.findOne({ where: { id: followerId } });
+    const user2_db = await User.findOne({ where: { id: req.user.id } });
+    if (!user1_db || !user2_db) {
+      return next(new CustomError("Error accepting request.2", false, 401));
+    }
+    await user1_db.increment({
+      followingCount: 1,
+    });
+    await user1_db.save();
+    await user2_db.increment({
+      followerCount: 1,
+    });
+    await user2_db.save();
     follow_db.status = "accepted";
     await follow_db.save();
     res.json({
