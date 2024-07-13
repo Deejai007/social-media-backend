@@ -1,4 +1,4 @@
-// const { check, validationResult } = require("express-validator");
+const { check, validationResult } = require("express-validator");
 const CustomError = require("../helpers/customError");
 // const { body } = require("express-validator");
 const {
