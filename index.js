@@ -16,7 +16,7 @@ const corsOptions = {
   origin: function (origin, callback) {
     //allow requests from no origin
     if (!origin) return callback(null, true);
-    console.log(origin);
+    // console.log(origin);
     // Check if the origin is in the allowedOrigins array or if there is no origin (for non-browser requests)
     if (allowedOrigins.includes(origin) || !origin) {
       callback(null, true);
