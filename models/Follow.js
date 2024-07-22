@@ -5,10 +5,12 @@ module.exports = (sequelize, DataTypes) => {
       Follow.belongsTo(models.User, {
         foreignKey: "followerId",
         as: "followers",
+        onDelete: "CASCADE",
       });
       Follow.belongsTo(models.User, {
         foreignKey: "followingId",
         as: "followings",
+        onDelete: "CASCADE",
       });
     }
   }

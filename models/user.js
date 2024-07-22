@@ -7,17 +7,28 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: "userEmail",
         sourceKey: "email",
         as: "otp",
+        onDelete: "CASCADE",
       });
       User.hasMany(models.Follow, {
         foreignKey: "followerId",
         as: "followers",
+        onDelete: "CASCADE",
       });
       User.hasMany(models.Follow, {
         foreignKey: "followingId",
         as: "followings",
+        onDelete: "CASCADE",
       });
-      User.hasMany(models.Post, { foreignKey: "userId", as: "posts" });
-      User.hasMany(models.Like, { foreignKey: "userId", as: "likes" });
+      User.hasMany(models.Post, {
+        foreignKey: "userId",
+        as: "posts",
+        onDelete: "CASCADE",
+      });
+      User.hasMany(models.Like, {
+        foreignKey: "userId",
+        as: "likes",
+        onDelete: "CASCADE",
+      });
     }
   }
   User.init(
@@ -42,6 +53,10 @@ module.exports = (sequelize, DataTypes) => {
         validate: {
           isEmail: true,
         },
+      },
+      postCount: {
+        type: DataTypes.INTEGER,
+        defaultValue: 0,
       },
       followerCount: {
         type: DataTypes.INTEGER,

@@ -1,17 +1,7 @@
-// const { check, validationResult } = require("express-validator");
 const CustomError = require("../helpers/customError");
-// const { getUserDataFromToken } = require("../helpers/auth/authutils");
-// const { errorHandler } = require("../middleware/errorMiddleware");
 const asyncHandler = require("express-async-handler");
-// const OtpModel = require("../models").OtpModel;
-// const otpGenerator = require("otp-generator");
-// const nodemailer = require("nodemailer");
 const { User, Follow } = require("../models");
-// const jwt = require("jsonwebtoken");
-// const bcrypt = require("bcrypt");
-// const { raw } = require("express");
 require("dotenv").config();
-
 const followController = {
   // follow user - send request
   sendFollowReq: asyncHandler(async (req, res, next) => {
@@ -71,6 +61,7 @@ const followController = {
     await user2_db.save();
     follow_db.status = "accepted";
     await follow_db.save();
+    console.log("accepted  ", followerId);
     res.json({
       success: true,
       message: "Follow request accepted",
@@ -123,24 +114,26 @@ const followController = {
   }),
   // get all pending requests
   getPendingRequests: asyncHandler(async (req, res, next) => {
-    const pendingRequests = await Follow.findAll({
+    let pendingRequests = await Follow.findAll({
       where: { followingId: req.user.id, status: "pending" },
-
       include: [
         {
           model: User,
           as: "followers", // Assuming your User model is named 'User' and has an alias 'follower'
-          attributes: [
-            "id",
-            "username",
-            "email" /* Add other attributes you need */,
-          ],
+          attributes: ["id", "username", "profileImage"],
         },
       ],
       attributes: [], // dont include any attributes of the model instance
       raw: true, //dont return instance of the model just return raw db object
       order: [["createdAt", "DESC"]], // get latest at top
     });
+    pendingRequests = pendingRequests.map((data) => ({
+      followerId:
+        data["followers.id"] !== null ? data["followers.id"].toString() : null,
+      followerProfileImage: data["followers.profileImage"],
+      followerUsername: data["followers.username"],
+    }));
+    console.log(pendingRequests);
     res.json({ success: true, message: "", data: pendingRequests });
   }),
 

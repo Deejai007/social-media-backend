@@ -11,13 +11,9 @@ const postController = {
     const { userId } = req.user.id;
     let formData = req.body;
 
-    // parse content into json
-
     console.log(formData);
     const imageFile = req.files[0];
 
-    // let postData = JSON.parse(postData);
-    // console.log(postData);
     const result = await new Promise((resolve, reject) => {
       cloudinary.uploader.upload(imageFile.path, (error, result) => {
         if (error) {
@@ -41,6 +37,7 @@ const postController = {
       location: formData.location,
       media: mediaUrl,
     });
+    await User.increment("postCount", { by: 1, where: { id: req.user.id } });
 
     res
       .status(201)
@@ -61,24 +58,20 @@ const postController = {
       },
     });
     if (!post) return next(new CustomError("Post not found!", false, 400));
-    // const likes = await Like.count({
-    //   where: { userId: req.user.id, postId: post.id },
-    // });
+
     let isLikedByUser = await Like.count({
       where: { userId: req.user.id, postId: post.id },
     });
     const postData = post.toJSON();
-    // postData.likes = likes;
     postData.username = postData.post.username;
     postData.profileImage = postData.post.profileImage;
     postData.isLikedByUser = isLikedByUser;
-    console.log(postData);
+
     res.status(201).json({ success: true, data: postData, message: "success" });
   }),
 
   // get user posts
   getPosts: asyncHandler(async (req, res, next) => {
-    console.log(req.params.postId);
     const userId = req.params.userId;
     if (!userId) {
       return next(new CustomError("Error fetching posts!", false, 400));
@@ -95,16 +88,12 @@ const postController = {
       limit: limit,
     });
 
-    console.log(posts);
-    // postData.likes = likes;
     res.status(201).json({ success: true, data: posts, message: "success" });
   }),
 
   // delete post
   deletePost: asyncHandler(async (req, res, next) => {
     const { postid } = req.params;
-    // console.log(postId);
-    // console.log(req.params.postid);
 
     const post = await Post.findByPk(postid);
     if (!post) {
@@ -116,6 +105,7 @@ const postController = {
       );
     }
     await post.destroy();
+    await User.decrement("postCount", { by: 1, where: { id: req.user.id } });
     res
       .status(200)
       .json({ success: true, data: "", message: "Post deleted successfully" });

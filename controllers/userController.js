@@ -38,12 +38,13 @@ const userController = {
     if (!user_db) {
       return next(new CustomError("Unable to fetch data", false, 401));
     }
-    const isFollowing = await Follow.count({
+    const isFollowing = await Follow.findOne({
       where: {
         followerId: req.user.id,
         followingId: user_db.id,
       },
     });
+    console.log(isFollowing);
     res
       .status(200)
       .json({ success: true, data: { user: user_db, isFollowing } });
@@ -52,9 +53,11 @@ const userController = {
   // add user data
   addUserData: asyncHandler(async (req, res, next) => {
     const userData = req.user;
+
     if (!userData) return next(new CustomError("Not authorized1", false, 401));
-    console.log(req.body.formData);
+    // console.log(req.body.formData);
     const { formData } = req.body;
+    // console.log("Formdata: ", formData);
     if (!formData) return next(new CustomError("Not authorized2", false, 401));
 
     const usernameCheck = await User.findOne({
@@ -75,8 +78,9 @@ const userController = {
     if (!user_db) {
       return res.status(404).json({ message: "User not found" });
     }
-
+    // console.log("user_db");
     await user_db.update(formData);
+    // console.log(user_db);
 
     res.status(200).json({
       success: true,

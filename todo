@@ -15,9 +15,9 @@
 @
 
 - -jwt
-  -sequelize
-  -postgres db
-  -email verify using otp
-  -cloudinary imagedb
-  -axios custom configuration
-  -custom error
+-sequelize
+-postgres db
+-email verify using otp
+-cloudinary imagedb
+-axios custom configuration
+-custom error
