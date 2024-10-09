@@ -1,18 +1,11 @@
+const { createAccessToken } = require("../helpers/auth/authutils");
 const { check, validationResult } = require("express-validator");
-const CustomError = require("../helpers/customError");
-// const { body } = require("express-validator");
-const {
-  // getUserDataFromToken,
-  createAccessToken,
-} = require("../helpers/auth/authutils");
-const asyncHandler = require("express-async-handler");
 const { OtpModel, User, Follow } = require("../models");
-// const OtpModel = require("../models").OtpModel;
-// const OtpModel = require("../models").Follow;
+const CustomError = require("../helpers/customError");
+const asyncHandler = require("express-async-handler");
 const otpGenerator = require("otp-generator");
+const logger = require("../helpers/logger");
 const nodemailer = require("nodemailer");
-// const User = require("../models").User;
-// const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 const crypto = require("crypto");
 require("dotenv").config();
@@ -25,7 +18,6 @@ const transporter = nodemailer.createTransport({
     pass: process.env.m_password,
   },
 });
-
 const userController = {
   // get user data
   getUser: asyncHandler(async (req, res, next) => {
@@ -44,7 +36,7 @@ const userController = {
         followingId: user_db.id,
       },
     });
-    console.log(isFollowing);
+
     res
       .status(200)
       .json({ success: true, data: { user: user_db, isFollowing } });
@@ -55,15 +47,15 @@ const userController = {
     const userData = req.user;
 
     if (!userData) return next(new CustomError("Not authorized1", false, 401));
-    // console.log(req.body.formData);
+    // logger.log(req.body.formData);
     const { formData } = req.body;
-    // console.log("Formdata: ", formData);
+    // logger.log("Formdata: ", formData);
     if (!formData) return next(new CustomError("Not authorized2", false, 401));
 
     const usernameCheck = await User.findOne({
       where: { username: formData.username },
     });
-    console.log(usernameCheck);
+    logger.log(usernameCheck);
     if (usernameCheck) {
       return next(
         new CustomError(
@@ -78,9 +70,9 @@ const userController = {
     if (!user_db) {
       return res.status(404).json({ message: "User not found" });
     }
-    // console.log("user_db");
+    // logger.log("user_db");
     await user_db.update(formData);
-    // console.log(user_db);
+    // logger.log(user_db);
 
     res.status(200).json({
       success: true,
@@ -124,7 +116,7 @@ const userController = {
         secure: process.env.production == "false",
         // sameSite: 'Strict',
       });
-      console.log();
+      logger.log();
       res.status(200).json({
         success: true,
         message: "Registration successful",
@@ -207,9 +199,9 @@ const userController = {
 
       transporter.sendMail(mailoptions, (err, info) => {
         if (err) {
-          console.log(err);
+          logger.log(err);
         } else {
-          console.log("Mail sent");
+          logger.log("Mail sent");
         }
       });
       // send updated access token after verification
@@ -241,7 +233,7 @@ const userController = {
   // send otp for verification
   sendotp: asyncHandler(async (req, res, next) => {
     const { email } = req.body;
-    console.log("sending email for ", email);
+    logger.log("sending email for ", email);
     const user_db = await User.findOne({
       where: {
         email: email,
@@ -272,7 +264,7 @@ const userController = {
       otp_db.otp = new_otp;
       await otp_db.save();
     }
-    console.log(new_otp);
+    logger.log(new_otp);
 
     const mailoptions = {
       from: process.env.m_email,
@@ -292,13 +284,13 @@ const userController = {
     };
     transporter.sendMail(mailoptions, (err, info) => {
       if (err) {
-        console.log(err);
+        logger.log(err);
         return next(
           new CustomError("Error sending mail! Please try again later!", 500)
         );
         // throw new Error("Mail not sent");
       } else {
-        console.log("Verification code sent to Email!");
+        logger.log("Verification code sent to Email!");
       }
     });
     res.status(200).json({
@@ -321,8 +313,8 @@ const userController = {
       return next(new CustomError("Invalid Credentials", false, 401));
     }
 
-    console.log(password);
-    console.log(user_db.password);
+    logger.log(password);
+    logger.log(user_db.password);
 
     const result = await bcrypt.compare(password, user_db.password);
     if (!result)
@@ -339,7 +331,7 @@ const userController = {
       secure: false,
       sameSite: "Lax",
     });
-    console.log();
+
     res.status(200).json({
       success: true,
       message: "Login successful",
@@ -391,10 +383,10 @@ const userController = {
 
     transporter.sendMail(mailOptions, (err, info) => {
       if (err) {
-        console.log(err);
+        logger.log(err);
         throw new Error("Mail not sent");
       } else {
-        console.log("mail sent");
+        logger.log("mail sent");
       }
     });
 
@@ -427,7 +419,7 @@ const userController = {
         )
       );
     }
-    console.log(user_db.email);
+    logger.log(user_db.email);
     if (!token || token !== user_db.resetPasswordToken) {
       return next(
         new CustomError(

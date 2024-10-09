@@ -1,5 +1,5 @@
 const errorHandler = (err, req, res, next) => {
-  const statusCode = err.status || 400;
+  const statusCode = err.status || 500;
 
   // Set the status code to the error status or default to 500
   res.status(statusCode);
@@ -9,7 +9,7 @@ const errorHandler = (err, req, res, next) => {
 
   res.json({
     success: err.success || false,
-    message: err.message || "Internal Server Errordj",
+    message: err.message || "Internal Server Error/dj",
     staack: err.stack,
   });
 };

@@ -26,7 +26,7 @@ This repository contains the backend implementation of a social media clone buil
 2. **Install dependencies:**
 
    ```bash
-   cd social-media-clone-backend
+   cd social-media-backend
    npm install
 
    ```

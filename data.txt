@@ -13,11 +13,7 @@ SIM
 	temp table for username so username is never duplicate
 	friends
 }
-^TABLES
-	employee
-	user
-	transaction-transaction id(PK),initiator type,initiator id,timestamp,amount,src account id, dest account id
-	branch
+
 
 https://chat.openai.com/c/172be8b9-4301-48d2-8eab-b8c6bf9f6319
 	
