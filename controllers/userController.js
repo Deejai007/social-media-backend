@@ -30,16 +30,33 @@ const userController = {
     if (!user_db) {
       return next(new CustomError("Unable to fetch data", false, 401));
     }
-    const isFollowing = await Follow.findOne({
+    logger.log(user_db);
+    const isFollowingRecord = await Follow.findOne({
       where: {
         followerId: req.user.id,
         followingId: user_db.id,
       },
     });
+    // logger.log(isFollowing);
 
-    res
-      .status(200)
-      .json({ success: true, data: { user: user_db, isFollowing } });
+    const followerCount = await Follow.count({
+      where: { followingId: user_db.id },
+    });
+    const followingCount = await Follow.count({
+      where: { followerId: user_db.id },
+    });
+
+    const userResponse = {
+      ...user_db.toJSON(),
+      isFollowing: isFollowingRecord?.status || null,
+      followerCount,
+      followingCount,
+    };
+
+    res.status(200).json({
+      success: true,
+      data: { user: userResponse },
+    });
   }),
 
   // add user data
@@ -313,8 +330,8 @@ const userController = {
       return next(new CustomError("Invalid Credentials", false, 401));
     }
 
-    logger.log(password);
-    logger.log(user_db.password);
+    // logger.log(password);
+    logger.log(user_db);
 
     const result = await bcrypt.compare(password, user_db.password);
     if (!result)

@@ -54,18 +54,6 @@ module.exports = (sequelize, DataTypes) => {
           isEmail: true,
         },
       },
-      postCount: {
-        type: DataTypes.INTEGER,
-        defaultValue: 0,
-      },
-      followerCount: {
-        type: DataTypes.INTEGER,
-        defaultValue: 0,
-      },
-      followingCount: {
-        type: DataTypes.INTEGER,
-        defaultValue: 0,
-      },
       password: {
         type: DataTypes.STRING,
         allowNull: false,

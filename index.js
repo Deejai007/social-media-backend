@@ -26,12 +26,11 @@ const corsOptions = {
   },
   credentials: true, // Allow credentials (cookies)
 };
+
 // const upload = require("../multerConfig");
 app.use(cors(corsOptions));
 app.use(cookieParser());
-
 app.use(express.json());
-
 app.use(express.urlencoded({ extended: true }));
 
 const db = require("./models/index");
@@ -43,7 +42,7 @@ const db = require("./models/index");
 
 // sample route
 app.get("/", (req, res) => {
-  res.json({ message: "Welcome!" });
+  res.json({ message: "Welcome!", ip: req.ip });
 });
 // routes
 app.use("/", routes);

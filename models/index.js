@@ -19,7 +19,7 @@ async function testConnection() {
     console.error("Unable to connect to the database:", error);
   }
 }
-
+console.log("Testing database connection...");
 testConnection();
 
 // Synchronize sequelize models with DB

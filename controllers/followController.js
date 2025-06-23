@@ -5,130 +5,101 @@ const { User, Follow } = require("../models");
 require("dotenv").config();
 
 const followController = {
-  // follow user - send request
+  // Send follow request
   sendFollowReq: asyncHandler(async (req, res, next) => {
     const { followingId } = req.body;
     if (followingId == req.user.id) {
-      return next(new CustomError("Cant follow yourself!", false, 401));
+      return next(new CustomError("Can't follow yourself!", false, 401));
     }
-    let follow_db = await Follow.findOne({
+    const existingFollow = await Follow.findOne({
       where: { followerId: req.user.id, followingId: followingId },
     });
-    if (follow_db) {
+    if (existingFollow) {
       return next(
         new CustomError("Follow request already pending", false, 401)
       );
     }
-
-    let follow_new = await Follow.create({
+    const follow = await Follow.create({
       followerId: req.user.id,
       followingId: followingId,
       status: "pending",
     });
-
     res.json({
       success: true,
       message: "Follow request sent!",
-      data: follow_new,
-    });
-
-    res.on("finish", () => {
-      console.log(
-        `Follow request sent by user ${req.user.id} to user ${followingId}`
-      );
+      data: follow,
     });
   }),
 
-  // accept follow request
+  // Accept follow request
   acceptFollowReq: asyncHandler(async (req, res, next) => {
     const { followerId } = req.body;
-
+    console.log(followerId, req.user.id);
     if (followerId == req.user.id) {
       return next(new CustomError("Can't follow yourself!", false, 401));
     }
-
-    const t = await sequelize.transaction(); // Start a transaction
-
+    const t = await sequelize.transaction();
     try {
-      let follow_db = await Follow.findOne({
+      const follow = await Follow.findOne({
         where: { followerId: followerId, followingId: req.user.id },
-        transaction: t, // Use the transaction
-      });
-
-      if (!follow_db) {
-        await t.rollback(); // Rollback transaction if not found
-        return next(new CustomError("Error accepting request.", false, 401));
-      }
-      const user1_db = await User.findOne({
-        where: { id: followerId },
         transaction: t,
       });
-      const user2_db = await User.findOne({
-        where: { id: req.user.id },
-        transaction: t,
-      });
-
-      if (!user1_db || !user2_db) {
+      if (!follow) {
         await t.rollback();
-        return next(new CustomError("Error accepting request.", false, 401));
+        return next(
+          new CustomError("No pending follow request found", false, 401)
+        );
       }
-
-      await user1_db.increment({ followingCount: 1 }, { transaction: t });
-      await user2_db.increment({ followerCount: 1 }, { transaction: t });
-
-      follow_db.status = "accepted";
-      await follow_db.save({ transaction: t });
-
+      await User.update(
+        { followerCount: sequelize.literal("followerCount + 1") },
+        { where: { id: req.user.id }, transaction: t }
+      );
+      await User.update(
+        { followingCount: sequelize.literal("followingCount + 1") },
+        { where: { id: followerId }, transaction: t }
+      );
+      follow.status = "accepted";
+      await follow.save({ transaction: t });
       await t.commit();
-
       res.json({
         success: true,
         message: "Follow request accepted",
-        data: follow_db,
+        data: follow,
       });
     } catch (error) {
+      console.log(error);
       await t.rollback();
-      console.error(error);
-      return next(new CustomError("Error accepting request.", false, 500));
-    }
-
-    res.on("finish", () => {
-      console.log(
-        `Follow request accepted by user ${req.user.id} from user ${followerId}`
+      return next(
+        new CustomError("Error accepting follow request", false, 500)
       );
-    });
+    }
   }),
 
-  // follow user - decline request
+  // Reject follow request
   rejectFollowReq: asyncHandler(async (req, res, next) => {
     const { followerId } = req.body;
-
     if (followerId == req.user.id) {
-      return next(new CustomError("Cant follow yourself!", false, 401));
+      return next(new CustomError("Can't follow yourself!", false, 401));
     }
-    let follow_db = await Follow.findOne({
+    const follow = await Follow.findOne({
       where: { followerId: followerId, followingId: req.user.id },
     });
-    if (!follow_db) {
-      return next(new CustomError("Error accepting request.1", false, 401));
+    if (!follow) {
+      return next(
+        new CustomError("No pending follow request found", false, 401)
+      );
     }
-    await follow_db.destroy();
+    await follow.destroy();
     res.json({
       success: true,
       message: "Follow request rejected",
       data: {},
     });
-
-    res.on("finish", () => {
-      console.log(
-        `Follow request rejected by user ${req.user.id} from user ${followerId}`
-      );
-    });
   }),
 
-  // get all pending requests
+  // Get all pending follow requests
   getPendingRequests: asyncHandler(async (req, res, next) => {
-    let pendingRequests = await Follow.findAll({
+    const pendingRequests = await Follow.findAll({
       where: { followingId: req.user.id, status: "pending" },
       include: [
         {
@@ -141,137 +112,111 @@ const followController = {
       raw: true,
       order: [["createdAt", "DESC"]],
     });
-    pendingRequests = pendingRequests.map((data) => ({
-      followerId:
-        data["followers.id"] !== null ? data["followers.id"].toString() : null,
-      followerProfileImage: data["followers.profileImage"],
-      followerUsername: data["followers.username"],
+    const formattedRequests = pendingRequests.map((request) => ({
+      followerId: request["followers.id"],
+      followerUsername: request["followers.username"],
+      followerProfileImage: request["followers.profileImage"],
     }));
-    res.json({ success: true, message: "", data: pendingRequests });
-
-    res.on("finish", () => {
-      console.log(`Pending requests fetched for user ${req.user.id}`);
+    res.json({
+      success: true,
+      message: "",
+      data: formattedRequests,
     });
   }),
 
-  // unfollow user: handles both unfollowing and remove follow request sent to some user
+  // Unfollow user or remove follow request
   unfollowUser: asyncHandler(async (req, res, next) => {
-    const { userData } = req.body;
-    const { followingId, mode } = userData;
-    console.log(mode);
-
+    const { followingId, mode } = req.body.userData;
+    console.log(req.body);
+    if (!followingId) {
+      return next(new CustomError("'followingId' is required", false, 400));
+    }
     if (followingId == req.user.id) {
       return next(new CustomError("Can't unfollow yourself!", false, 401));
     }
     const t = await sequelize.transaction();
-
     try {
-      let follow_db = await Follow.findOne({
+      const follow = await Follow.findOne({
         where: { followerId: req.user.id, followingId: followingId },
         transaction: t,
       });
-      console.log(follow_db.status);
-
-      if (!follow_db) {
+      if (!follow) {
         await t.rollback();
-        return next(new CustomError("Error unfollowing user!", false, 401));
+        return next(
+          new CustomError("No follow relationship found", false, 401)
+        );
       }
-
-      const user1_db = await User.findOne({
-        where: { id: req.user.id },
-        transaction: t,
-      });
-      const user2_db = await User.findOne({
-        where: { id: followingId },
-        transaction: t,
-      });
-
-      if (!user1_db || !user2_db) {
-        await t.rollback();
-        return next(new CustomError("Error unfollowing user!", false, 401));
+      if (mode === "unfollow") {
+        await User.update(
+          { followerCount: sequelize.literal("followerCount - 1") },
+          { where: { id: followingId }, transaction: t }
+        );
+        await User.update(
+          { followingCount: sequelize.literal("followingCount - 1") },
+          { where: { id: req.user.id }, transaction: t }
+        );
+      } else if (mode === "reqUnfollow") {
+        await User.update(
+          { followingCount: sequelize.literal("followingCount - 1") },
+          { where: { id: req.user.id }, transaction: t }
+        );
+        await User.update(
+          { followerCount: sequelize.literal("followerCount - 1") },
+          { where: { id: followingId }, transaction: t }
+        );
       }
-      if (mode == "reqUnfollow") {
-        await user1_db.decrement({ followingCount: 1 }, { transaction: t });
-        await user2_db.decrement({ followerCount: 1 }, { transaction: t });
-      }
-
-      await follow_db.destroy({ transaction: t });
-
+      await follow.destroy({ transaction: t });
       await t.commit();
-
       res.json({
         success: true,
-        message: "User Unfollowed!",
+        message: "Unfollowed user or removed follow request",
+        data: {},
       });
     } catch (error) {
       await t.rollback();
-      console.error(error);
-      return next(new CustomError("Error unfollowing user.", false, 500));
+      // console.log(error);
+      return next(new CustomError("Error unfollowing user", false, 500, error));
     }
-
-    res.on("finish", () => {
-      console.log(`User ${req.user.id} unfollowed user ${followingId}`);
-    });
   }),
 
-  // remove follower
+  // Remove follower
   removeFollower: asyncHandler(async (req, res, next) => {
     const { followerId } = req.body;
-
     if (followerId == req.user.id) {
       return next(new CustomError("Can't remove yourself!", false, 401));
     }
-
     const t = await sequelize.transaction();
-
     try {
-      let follow_db = await Follow.findOne({
+      const follow = await Follow.findOne({
         where: { followerId: followerId, followingId: req.user.id },
         transaction: t,
       });
-
-      if (!follow_db) {
+      if (!follow) {
         await t.rollback();
-        return next(new CustomError("Error removing follower!", false, 401));
+        return next(new CustomError("No follower found", false, 401));
       }
-
-      const user1_db = await User.findOne({
-        where: { id: followerId },
-        transaction: t,
-      });
-      const user2_db = await User.findOne({
-        where: { id: req.user.id },
-        transaction: t,
-      });
-
-      if (!user1_db || !user2_db) {
-        await t.rollback();
-        return next(new CustomError("Error removing follower.", false, 401));
-      }
-
-      await user1_db.decrement({ followingCount: 1 }, { transaction: t });
-      await user2_db.decrement({ followerCount: 1 }, { transaction: t });
-
-      await follow_db.destroy({ transaction: t });
-
+      await User.update(
+        { followerCount: sequelize.literal("followerCount - 1") },
+        { where: { id: req.user.id }, transaction: t }
+      );
+      await User.update(
+        { followingCount: sequelize.literal("followingCount - 1") },
+        { where: { id: followerId }, transaction: t }
+      );
+      await follow.destroy({ transaction: t });
       await t.commit();
-
       res.json({
         success: true,
-        message: "Follower removed!",
+        message: "Follower removed",
+        data: {},
       });
     } catch (error) {
       await t.rollback();
-      console.error(error);
-      return next(new CustomError("Error removing follower.", false, 500));
+      return next(new CustomError("Error removing follower", false, 500));
     }
-
-    res.on("finish", () => {
-      console.log(`Follower ${followerId} removed by user ${req.user.id}`);
-    });
   }),
 
-  // get followers of a user
+  // Get followers of a user
   getFollowers: asyncHandler(async (req, res, next) => {
     const userId = req.user.id;
     const followers = await User.findAll({
@@ -283,14 +228,14 @@ const followController = {
       },
       attributes: ["id", "username", "profileImage"],
     });
-    res.json({ success: true, data: followers, message: "" });
-
-    res.on("finish", () => {
-      console.log(`Followers fetched for user ${userId}`);
+    res.json({
+      success: true,
+      message: "",
+      data: followers,
     });
   }),
 
-  // get user followed by a user
+  // Get users that the current user is following
   getFollowing: asyncHandler(async (req, res, next) => {
     const userId = req.user.id;
     const followings = await User.findAll({
@@ -302,10 +247,10 @@ const followController = {
       },
       attributes: ["id", "username", "profileImage"],
     });
-    res.json({ success: true, data: followings, message: "" });
-
-    res.on("finish", () => {
-      console.log(`Following list fetched for user ${userId}`);
+    res.json({
+      success: true,
+      message: "",
+      data: followings,
     });
   }),
 };
