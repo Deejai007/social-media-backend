@@ -64,7 +64,7 @@ const userController = {
     const userData = req.user;
 
     if (!userData) return next(new CustomError("Not authorized1", false, 401));
-    // logger.log(req.body.formData);
+    logger.log(req.body.formData);
     const { formData } = req.body;
     // logger.log("Formdata: ", formData);
     if (!formData) return next(new CustomError("Not authorized2", false, 401));
@@ -78,7 +78,8 @@ const userController = {
         new CustomError(
           "Username is already taken. Choose a different username",
           false,
-          401
+          401,
+          { target: "username" }
         )
       );
     }

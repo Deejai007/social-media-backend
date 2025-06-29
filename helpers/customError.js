@@ -1,5 +1,5 @@
 class CustomError extends Error {
-  constructor(message, success, status, obj = {}) {
+  constructor(message, success, status, obj) {
     console.log("-----------");
     console.log("CustomError:", message, success, status, obj);
     console.log("-----------");
@@ -7,6 +7,7 @@ class CustomError extends Error {
     this.status = status;
     this.success = success;
     this.name = CustomError.name;
+    this.target = obj.target;
   }
 }
 

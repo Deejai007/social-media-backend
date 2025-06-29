@@ -9,8 +9,9 @@ const errorHandler = (err, req, res, next) => {
 
   res.json({
     success: err.success || false,
-    message: err.message || "Internal Server Error/dj",
+    message: err.message || "Internal Server Error",
     staack: err.stack,
+    target: err.target || null,
   });
 };
 
