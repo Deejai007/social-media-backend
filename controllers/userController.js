@@ -131,10 +131,10 @@ const userController = {
 
       res.cookie("token", accesstoken, {
         httpOnly: true,
-        secure: process.env.production == "false",
-        // sameSite: 'Strict',
+        secure: process.env.production === "true",
+        sameSite: "None", // or "None" if cross-origin
+        maxAge: 1000 * 60 * 60 * 24, // 1 hour
       });
-      logger.log();
       res.status(200).json({
         success: true,
         message: "Registration successful",
@@ -233,8 +233,9 @@ const userController = {
 
       res.cookie("token", accesstoken, {
         httpOnly: true,
-        secure: process.env.production == "false",
-        // sameSite: 'Strict',
+        secure: process.env.production === "true",
+        sameSite: "None", // or "None" if cross-origin
+        maxAge: 1000 * 60 * 60 * 24, // 1 hour
       });
 
       res.status(200).json({
@@ -346,8 +347,9 @@ const userController = {
     const accesstoken = createAccessToken(userData);
     res.cookie("token", accesstoken, {
       httpOnly: true,
-      secure: false,
-      sameSite: "Lax",
+      secure: process.env.production === "true",
+      sameSite: "None", // or "None" if cross-origin
+      maxAge: 1000 * 60 * 60 * 24, // 1 hour
     });
 
     res.status(200).json({
