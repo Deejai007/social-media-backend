@@ -7,7 +7,7 @@ class CustomError extends Error {
     this.status = status;
     this.success = success;
     this.name = CustomError.name;
-    this.target = obj.target;
+    this.target = obj?.target || null;
   }
 }
 

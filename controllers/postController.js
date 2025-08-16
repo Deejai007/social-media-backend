@@ -36,6 +36,7 @@ const postController = {
       caption: formData.caption,
       location: formData.location,
       media: mediaUrl,
+      isPrivate: formData.isPrivate === "true" || formData.isPrivate === true, // expects boolean or string 'true'
     });
     await User.increment("postCount", { by: 1, where: { id: req.user.id } });
 
@@ -54,10 +55,26 @@ const postController = {
       include: {
         model: User,
         as: "post",
-        attributes: ["username", "profileImage"],
+        attributes: ["id", "username", "profileImage"],
       },
     });
     if (!post) return next(new CustomError("Post not found!", false, 400));
+
+    // Check privacy: if private, only owner or followers can view
+    if (post.isPrivate && req.user.id !== post.userId) {
+      // Check if requester is a follower
+      const { Follow } = require("../models");
+      const follow = await Follow.findOne({
+        where: {
+          followerId: req.user.id,
+          followingId: post.userId,
+          status: "accepted",
+        },
+      });
+      if (!follow) {
+        return next(new CustomError("This post is private.", false, 403));
+      }
+    }
 
     let isLikedByUser = await Like.count({
       where: { userId: req.user.id, postId: post.id },
@@ -79,11 +96,30 @@ const postController = {
     const limit = parseInt(req.query.limit) || 9;
     const offset = parseInt(req.query.offset) || 0;
 
+    // Only return public posts, or private posts if requester is owner or follower
+    let whereClause = { userId: userId };
+    if (req.user.id !== parseInt(userId)) {
+      // Not the owner, so only show public or private if follower
+      const { Follow } = require("../models");
+      const isFollower = await Follow.findOne({
+        where: {
+          followerId: req.user.id,
+          followingId: userId,
+          status: "accepted",
+        },
+      });
+      if (isFollower) {
+        // Show both public and private
+        // no change to whereClause
+      } else {
+        // Only show public
+        whereClause.isPrivate = false;
+      }
+    }
     let posts = await Post.findAll({
-      where: { userId: userId },
-      // attributes: [], // dont include any attributes of the model instance
-      raw: true, //dont return instance of the model just return raw db object
-      order: [["createdAt", "DESC"]], // get latest at top
+      where: whereClause,
+      raw: true,
+      order: [["createdAt", "DESC"]],
       offset: offset,
       limit: limit,
     });
