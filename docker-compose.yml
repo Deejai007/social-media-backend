@@ -1,0 +1,18 @@
+services:
+  app:
+    container_name: auth-app
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - m_email=${m_email}
+      - m_password=${m_password}
+      - pro_name=${pro_name}
+      - CLIENT_URL=${CLIENT_URL}
+      - JWT_SECRET=${JWT_SECRET}
+      - production=${production}
+    volumes:
+      - ./:/app
+      - /app/node_modules
+    restart: unless-stopped

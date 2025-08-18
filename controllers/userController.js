@@ -6,18 +6,18 @@ const asyncHandler = require("express-async-handler");
 const otpGenerator = require("otp-generator");
 const logger = require("../helpers/logger");
 const nodemailer = require("nodemailer");
-const bcrypt = require("bcrypt");
+const bcrypt = require("bcryptjs");
 const crypto = require("crypto");
 require("dotenv").config();
 
-// Nodemailer init
 const transporter = nodemailer.createTransport({
-  service: "gmail",
+  service: process.env.EMAIL_SERVICE || "gmail",
   auth: {
     user: process.env.m_email,
-    pass: process.env.m_password,
+    pass: process.env.m_pass,
   },
 });
+
 const userController = {
   // get user data
   getUser: asyncHandler(async (req, res, next) => {
@@ -285,7 +285,7 @@ const userController = {
     }
     logger.log(new_otp);
 
-    const mailoptions = {
+    const mailOptions = {
       from: process.env.m_email,
       to: email,
       subject: `${process.env.pro_name} - OTP for Verification `,
@@ -301,15 +301,13 @@ const userController = {
        </div>
         `,
     };
-    transporter.sendMail(mailoptions, (err, info) => {
+
+    transporter.sendMail(mailOptions, (err, info) => {
       if (err) {
         logger.log(err);
-        return next(
-          new CustomError("Error sending mail! Please try again later!", 500)
-        );
-        // throw new Error("Mail not sent");
+        throw new Error("Mail not sent");
       } else {
-        logger.log("Verification code sent to Email!");
+        logger.log("mail sent");
       }
     });
     res.status(200).json({
@@ -472,6 +470,8 @@ const userController = {
       );
     }
     user_db.password = hash;
+
+    module.exports = userController;
     user_db.resetPasswordToken = null;
     await user_db.save();
     return res
@@ -479,4 +479,5 @@ const userController = {
       .json({ success: true, message: "Password successfully changed!" });
   }),
 };
+module.exports = userController;
 module.exports = userController;
