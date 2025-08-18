@@ -5,18 +5,10 @@ const CustomError = require("../helpers/customError");
 const asyncHandler = require("express-async-handler");
 const otpGenerator = require("otp-generator");
 const logger = require("../helpers/logger");
-const nodemailer = require("nodemailer");
+const mailQueue = require("../helpers/mailqueue");
 const bcrypt = require("bcryptjs");
 const crypto = require("crypto");
 require("dotenv").config();
-
-const transporter = nodemailer.createTransport({
-  service: process.env.EMAIL_SERVICE || "gmail",
-  auth: {
-    user: process.env.m_email,
-    pass: process.env.m_pass,
-  },
-});
 
 const userController = {
   // get user data
@@ -72,7 +64,6 @@ const userController = {
     const usernameCheck = await User.findOne({
       where: { username: formData.username },
     });
-    logger.log(usernameCheck);
     if (usernameCheck) {
       return next(
         new CustomError(
@@ -131,9 +122,9 @@ const userController = {
 
       res.cookie("token", accesstoken, {
         httpOnly: true,
-        secure: process.env.production === "true",
-        sameSite: "None", // or "None" if cross-origin
-        maxAge: 1000 * 60 * 60 * 24, // 1 hour
+        secure: process.env.production === "true", // true in production (HTTPS), false in dev
+        sameSite: process.env.production === "true" ? "None" : "lax", // None for cross-site prod, lax for dev
+        maxAge: 1000 * 60 * 60 * 24, // 1 day
       });
       res.status(200).json({
         success: true,
@@ -215,13 +206,8 @@ const userController = {
         `,
       };
 
-      transporter.sendMail(mailoptions, (err, info) => {
-        if (err) {
-          logger.log(err);
-        } else {
-          logger.log("Mail sent");
-        }
-      });
+      sendMail(mailoptions);
+
       // send updated access token after verification
       const userData = {
         id: user_db.id,
@@ -233,9 +219,9 @@ const userController = {
 
       res.cookie("token", accesstoken, {
         httpOnly: true,
-        secure: process.env.production === "true",
-        sameSite: "None", // or "None" if cross-origin
-        maxAge: 1000 * 60 * 60 * 24, // 1 hour
+        secure: process.env.production === "true", // true in production (HTTPS), false in dev
+        sameSite: process.env.production === "true" ? "None" : "lax", // None for cross-site prod, lax for dev
+        maxAge: 1000 * 60 * 60 * 24, // 1 day
       });
 
       res.status(200).json({
@@ -302,17 +288,12 @@ const userController = {
         `,
     };
 
-    transporter.sendMail(mailOptions, (err, info) => {
-      if (err) {
-        logger.log(err);
-        throw new Error("Mail not sent");
-      } else {
-        logger.log("mail sent");
-      }
-    });
+    await mailQueue.add("sendMail", mailoptions);
+    logger.log("Mail task queued");
+
     res.status(200).json({
       success: true,
-      message: "mail sent",
+      message: "OTP generated and mail queued",
     });
   }),
 
@@ -345,9 +326,9 @@ const userController = {
     const accesstoken = createAccessToken(userData);
     res.cookie("token", accesstoken, {
       httpOnly: true,
-      secure: process.env.production === "true",
-      sameSite: "None", // or "None" if cross-origin
-      maxAge: 1000 * 60 * 60 * 24, // 1 hour
+      secure: process.env.production === "true", // true in production (HTTPS), false in dev
+      sameSite: process.env.production === "true" ? "None" : "lax", // None for cross-site prod, lax for dev
+      maxAge: 1000 * 60 * 60 * 24, // 1 day
     });
 
     res.status(200).json({
@@ -399,14 +380,7 @@ const userController = {
       If you did not request this, please ignore this email and your password will remain unchanged.\n`,
     };
 
-    transporter.sendMail(mailOptions, (err, info) => {
-      if (err) {
-        logger.log(err);
-        throw new Error("Mail not sent");
-      } else {
-        logger.log("mail sent");
-      }
-    });
+    sendMail(mailOptions);
 
     res.status(200).json({
       success: true,
