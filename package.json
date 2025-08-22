@@ -5,13 +5,15 @@
   "main": "index.js",
   "scripts": {
     "dev": "nodemon index.js",
-    "test": "npm run test"
+    "test": "npm run test",
+    "start": "node index.js",
+    "worker": "node worker.js"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
     "bcryptjs": "^3.0.2",
-    "bullmq": "^5.57.0",
+    "bullmq": "^5.58.0",
     "celery-node": "^0.5.9",
     "cloudinary": "^2.2.0",
     "cookie-parser": "^1.4.6",

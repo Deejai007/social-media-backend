@@ -288,12 +288,12 @@ const userController = {
         `,
     };
 
-    await mailQueue.add("sendMail", mailoptions);
+    await mailQueue.add("sendMail", mailOptions);
     logger.log("Mail task queued");
 
     res.status(200).json({
       success: true,
-      message: "OTP generated and mail queued",
+      message: "Verification Mail sent to email! new",
     });
   }),
 

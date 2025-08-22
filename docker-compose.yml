@@ -1,18 +1,48 @@
+version: "3.9"
 services:
   app:
-    container_name: auth-app
     build: .
+    container_name: app
+    command: ["npm", "start"]
     ports:
-      - "3000:3000"
-    environment:
-      - NODE_ENV=production
-      - m_email=${m_email}
-      - m_password=${m_password}
-      - pro_name=${pro_name}
-      - CLIENT_URL=${CLIENT_URL}
-      - JWT_SECRET=${JWT_SECRET}
-      - production=${production}
+      - "8967:8967"
+    env_file:
+      - .env.prod
+    depends_on:
+      - redis
+      - postgres
     volumes:
-      - ./:/app
-      - /app/node_modules
-    restart: unless-stopped
+      - .:/usr/src/app
+      - /usr/src/app/node_modules
+
+  worker:
+    build: .
+    container_name: worker
+    command: ["npm", "run", "worker"]
+    env_file:
+      - .env.prod
+    depends_on:
+      - redis
+      - postgres
+
+  redis:
+    image: redis:7
+    restart: always
+    ports:
+      - "6379:6379"
+
+  postgres:
+    image: postgres:15
+    container_name: postgres
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: auth
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
