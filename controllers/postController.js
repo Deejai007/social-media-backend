@@ -38,7 +38,7 @@ const postController = {
       media: mediaUrl,
       isPrivate: formData.isPrivate === "true" || formData.isPrivate === true, // expects boolean or string 'true'
     });
-    await User.increment("postCount", { by: 1, where: { id: req.user.id } });
+    // await User.increment("postCount", { by: 1, where: { id: req.user.id } });
 
     res
       .status(201)
@@ -141,7 +141,7 @@ const postController = {
       );
     }
     await post.destroy();
-    await User.decrement("postCount", { by: 1, where: { id: req.user.id } });
+    // await User.decrement("postCount", { by: 1, where: { id: req.user.id } });
     res
       .status(200)
       .json({ success: true, data: "", message: "Post deleted successfully" });

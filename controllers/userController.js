@@ -206,8 +206,8 @@ const userController = {
         `,
       };
 
-      sendMail(mailoptions);
-
+      await mailQueue.add("sendMail", mailOptions);
+      logger.log("Mail task queued");
       // send updated access token after verification
       const userData = {
         id: user_db.id,
@@ -356,6 +356,7 @@ const userController = {
       return next(
         new CustomError("User not found! Please register first", false, 400)
       );
+
     if (user_db.resetPasswordExpires > Date.now()) {
       return next(
         new CustomError(
@@ -368,20 +369,20 @@ const userController = {
     const token = crypto.randomBytes(20).toString("hex");
     user_db.resetPasswordToken = token;
     user_db.resetPasswordExpires = Date.now() + 900000; // 15 minutes
-    await user_db.save();
-
+    logger.log(token + "/password-reset/" + token);
     const mailOptions = {
       to: email,
       from: process.env.m_email,
       subject: "Password reset request.",
       text: `You are receiving this because you have requested the reset of the password for your account.\n\n
       Please click on the following link, or paste this into your browser to complete the process:\n\n
-      ${process.env.CLIENT_URL}/password-reset/${token} \n\n
+      <a href="${process.env.CLIENT_URL}/password-reset/${token}">Reset Password</a>\n\n
       If you did not request this, please ignore this email and your password will remain unchanged.\n`,
     };
 
-    sendMail(mailOptions);
-
+    await mailQueue.add("sendMail", mailOptions);
+    logger.log("Mail task queued");
+    await user_db.save();
     res.status(200).json({
       success: true,
       message: "Password Change email sent!",
