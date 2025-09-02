@@ -193,7 +193,7 @@ const userController = {
       await user_db.save();
       await otp_db.destroy();
 
-      const mailoptions = {
+      const mailOptions = {
         from: process.env.m_email,
         to: email,
         subject: `Email verification- ${process.env.pro_name} !`,
@@ -380,7 +380,7 @@ const userController = {
       If you did not request this, please ignore this email and your password will remain unchanged.\n`,
     };
 
-    await mailQueue.add("sendMail", mailOptions);
+    await mailQueue.add("sendMail", mailOptionsmailOptions);
     logger.log("Mail task queued");
     await user_db.save();
     res.status(200).json({

@@ -10,7 +10,7 @@ var routes = require("./router/routes");
 const allowedOrigins = [
   "http://localhost:5173", // local
   "https://treiwo.netlify.app", // Netlify
-  "https://treiwo.deepakdev.tech/", //domain
+  "https://treiwo.deepakdev.tech", //domain
 ];
 
 const corsOptions = {
