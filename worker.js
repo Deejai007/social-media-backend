@@ -8,19 +8,17 @@ const connection = {
     port: process.env.REDIS_PORT || 6379,
   },
 };
-
+const transporter = nodemailer.createTransport({
+  service: "gmail",
+  auth: {
+    user: process.env.m_email,
+    pass: process.env.m_password,
+  },
+});
 const mailWorker = new Worker(
   "mailQueue",
   async (job) => {
     if (job.name === "sendMail") {
-      const transporter = nodemailer.createTransport({
-        service: "gmail",
-        auth: {
-          user: process.env.m_email,
-          pass: process.env.m_password,
-        },
-      });
-
       await transporter.sendMail(job.data);
       console.log(`✅ Email sent to ${job.data.to}`);
     }

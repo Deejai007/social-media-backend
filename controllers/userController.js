@@ -312,7 +312,7 @@ const userController = {
     }
 
     // logger.log(password);
-    logger.log(user_db);
+    //logger.log(user_db);
 
     const result = await bcrypt.compare(password, user_db.password);
     if (!result)
@@ -358,6 +358,7 @@ const userController = {
       );
 
     if (user_db.resetPasswordExpires > Date.now()) {
+      // user_db.resetPasswordExpires = Date.now();
       return next(
         new CustomError(
           "Email is already sent! If not received, try again after some time!",
@@ -369,7 +370,7 @@ const userController = {
     const token = crypto.randomBytes(20).toString("hex");
     user_db.resetPasswordToken = token;
     user_db.resetPasswordExpires = Date.now() + 900000; // 15 minutes
-    logger.log(token + "/password-reset/" + token);
+    logger.log(process.env.CLIENT_URL + "/password-reset/" + token);
     const mailOptions = {
       to: email,
       from: process.env.m_email,
@@ -380,7 +381,7 @@ const userController = {
       If you did not request this, please ignore this email and your password will remain unchanged.\n`,
     };
 
-    await mailQueue.add("sendMail", mailOptionsmailOptions);
+    await mailQueue.add("sendMail", mailOptions);
     logger.log("Mail task queued");
     await user_db.save();
     res.status(200).json({
@@ -453,6 +454,17 @@ const userController = {
       .status(200)
       .json({ success: true, message: "Password successfully changed!" });
   }),
+  //  verifying token and resetting password
+  getFeed: asyncHandler(async (req, res, next) => {
+    let username = req.params.username;
+
+    if (!username) {
+      return next(new CustomError("Unable to fetch feed!", false, 401));
+    }
+
+    return res
+      .status(200)
+      .json({ success: true, message: "Password successfully changed!" });
+  }),
 };
-module.exports = userController;
 module.exports = userController;

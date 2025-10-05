@@ -20,17 +20,14 @@ const postController = {
           reject(error);
         } else {
           console.log("Image uploaded:", result.secure_url);
-
-          // Remove the file from the server after uploading
           fs.unlinkSync(imageFile.path);
           resolve(result.secure_url);
         }
       });
     });
-    console.log(result);
-    const mediaUrl = result;
 
-    // create new post row
+    const mediaUrl = result;
+    // Create new post with privacy setting
     const newPost = await Post.create({
       userId: req.user.id,
       caption: formData.caption,
@@ -38,11 +35,12 @@ const postController = {
       media: mediaUrl,
       isPrivate: formData.isPrivate === "true" || formData.isPrivate === true, // expects boolean or string 'true'
     });
-    // await User.increment("postCount", { by: 1, where: { id: req.user.id } });
 
-    res
-      .status(201)
-      .json({ success: true, postId: newPost.id, message: "Post uploaded" });
+    res.status(201).json({
+      success: true,
+      postId: newPost.id,
+      message: "Post uploaded",
+    });
   }),
 
   // get single post
@@ -116,6 +114,7 @@ const postController = {
         whereClause.isPrivate = false;
       }
     }
+
     let posts = await Post.findAll({
       where: whereClause,
       raw: true,

@@ -57,3 +57,6 @@ router.post(
 );
 router.post("/adduserdata", getAccessToRoute, authctrl.addUserData);
 module.exports = router;
+
+router.post("/feed", getAccessToRoute, authctrl.getFeed);
+module.exports = router;
