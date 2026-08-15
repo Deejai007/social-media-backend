@@ -1,164 +1,167 @@
-# <p align="center">Treiwo Backend</p>
+# Treiwo Backend
 
-This repository contains the backend implementation of a social media clone built using Node.js, Express.js, Sequelize, and PostgreSQL. It includes features like JWT authentication, email verification using OTP, and integration with Cloudinary for image storage.
+This repository contains the backend of Treiwo - a social media platform - built with Node.js, Express.js, Sequelize, and PostgreSQL. Includes JWT auth, email OTP, Cloudinary, Redis/BullMQ background jobs, and real-time chat via Spring WebSocket microservice (ChatMS).
+
+---
+
+## Services Overview
+
+When run via Docker Compose, 5 containers start together:
+
+| Container | Description | Port |
+|-----------|-------------|------|
+| app | Node.js auth/API server | **8967** |
+| worker | Background job processor (BullMQ) | none |
+| redis | Job queue and cache | **6379** |
+| postgres | Primary PostgreSQL database | **5432** |
+| chatms | Spring Boot WebSocket chat microservice | **5679** |
 
 ---
 
 ## Features
 
-- **JWT Authentication**: Secure user authentication using JSON Web Tokens.
-- **Supabase**:for cloud PostgreSQL database .
-- **Sequelize**: Promise-based Node.js ORM for PostgreSQL.
-- **Cloudinary Image Storage**: Store and manage images efficiently with Cloudinary.
-- **Email Verification**: Verify user emails using OTP.
+- JWT Authentication (cookie + Bearer header fallback)
+- PostgreSQL + Sequelize ORM
+- Redis + BullMQ background jobs (emails, notifications)
+- Cloudinary image upload and storage
+- Email OTP verification on register
+- Real-time WebSocket chat via ChatMS (port 5679)
 
 ---
 
 ## Installation
 
-1. **Clone the repository:**
-
-   ```bash
-   git clone https://github.com/Deejai007/social-media-backend.git
-
-   ```
-
-2. **Install dependencies:**
-
-   ```bash
-   cd social-media-backend
-   npm install
-
-   ```
-
-3. **Set up environment variables:**
+```bash
+git clone https://github.com/Deejai007/social-media-backend.git
+cd social-media-backend
+npm install
+node index.js
+```
 
 ---
 
-## Example `.env` Configuration
+## Docker Compose (Recommended)
+
+Both repos must be cloned as siblings:
+
+```
+Projects/
++-- auth/     <- this repo
++-- chatms/   <- Spring chat microservice
+```
+
+```bash
+docker-compose up -d --build   # start all 5 services
+docker-compose down            # stop all
+```
+
+---
+
+## .env Configuration
 
 ```env
 PORT=8967
-
-# Database connection string
-DATABASE_URL=postgresql://postgres:mysql@localhost:5432/Mybank
-
-# Nodemailer (for sending emails)
+DATABASE_URL=postgresql://postgres:postgres@localhost:5432/auth
 m_email=your_email@gmail.com
 m_password=your_app_password
-
-# Project name (for email templates, etc.)
-pro_name=YourProjectName
-
-# JWT secret
+pro_name=Treiwo
 ACCESS_TOKEN_SECRET=your_jwt_secret
-
-# Password reset token expiry (in ms)
 RESET_PASSWORD_EXPIRE=36000000
-
-# Cloudinary credentials
-cloudinary_cloudname=your_cloudinary_cloudname
-cloudinary_apikey=your_cloudinary_apikey
-cloudinary_apisecret=your_cloudinary_apisecret
-
-# Set to "true" in production
-production=false
-
-# Client URL (frontend)
+cloudinary_cloudname=your_cloudname
+cloudinary_apikey=your_apikey
+cloudinary_apisecret=your_apisecret
+REDIS_URL=redis://redis:6379
+REDIS_HOST=redis
+REDIS_PORT=6379
+POSTGRES_HOST=postgres
+POSTGRES_PORT=5432
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=postgres
+POSTGRES_DB=auth
 CLIENT_URL=http://localhost:5173
+production=false
 ```
 
-> **Note:**
->
-> - Replace all placeholder values with your actual credentials.
-> - Never commit your real `.env` file to public
-
-4. **Start the server:**
-   ```bash
-   node index.js
-   ```
+> Never commit real credentials to version control.
 
 ---
 
-## API Documentation
+## API Routes
 
-This document describes the available API routes for the Express authentication app.
+### Base URL: http://localhost:8967
 
----
+### User Routes (/user)
 
-### User Routes (`/user`)
+| Method | Endpoint | Description | Auth |
+|--------|----------|-------------|------|
+| GET | /user/getuser/:username | Get profile by username | Yes |
+| GET | /user/search?query= | Search users | Yes |
+| POST | /user/register | Register new user | No |
+| POST | /user/verify | Verify email OTP | No |
+| POST | /user/verifysendotp | Resend OTP | No |
+| POST | /user/login | Login | No |
+| POST | /user/forgotpassword | Send reset email | No |
+| POST | /user/forgotresetpassword | Reset password | No |
+| POST | /user/adduserdata | Update profile | Yes |
 
-| Method | Endpoint                    | Description                     | Auth Required | Body / Params                 |
-| ------ | --------------------------- | ------------------------------- | ------------- | ----------------------------- |
-| GET    | `/user/getuser/:username`   | Get user profile by username    | Yes           | URL param: `username`         |
-| POST   | `/user/register`            | Register new user               | No            | `{ email, password }`         |
-| POST   | `/user/verify`              | Verify user email with OTP      | No            | `{ email, otp }`              |
-| POST   | `/user/verifysendotp`       | Send OTP for email verification | No            | `{ email }`                   |
-| POST   | `/user/login`               | Login user                      | No            | `{ email, password }`         |
-| POST   | `/user/forgotpassword`      | Send password reset email       | No            | `{ email }`                   |
-| POST   | `/user/forgotresetpassword` | Reset password using token      | No            | `{ token, newPassword }`      |
-| POST   | `/user/adduserdata`         | Add/update user profile data    | Yes           | `{ formData: { ...fields } }` |
+### Follow Routes (/follow)
 
----
+| Method | Endpoint | Description | Auth |
+|--------|----------|-------------|------|
+| POST | /follow/sendreq | Send follow request | Yes |
+| POST | /follow/acceptreq | Accept follow request | Yes |
+| POST | /follow/rejectreq | Reject follow request | Yes |
+| POST | /follow/unfollow-user | Unfollow | Yes |
+| POST | /follow/remove-follower | Remove follower | Yes |
+| GET | /follow/get-pending-requests | Pending requests | Yes |
+| GET | /follow/followers | Followers list | Yes |
+| GET | /follow/followings | Followings list | Yes |
 
-### Follow Routes (`/follow`)
+### Post Routes (/post)
 
-| Method | Endpoint                       | Description                  | Auth Required | Body / Params     |
-| ------ | ------------------------------ | ---------------------------- | ------------- | ----------------- |
-| POST   | `/follow/sendreq`              | Send follow request          | Yes           | `{ followingId }` |
-| POST   | `/follow/acceptreq`            | Accept follow request        | Yes           | `{ followerId }`  |
-| POST   | `/follow/rejectreq`            | Reject follow request        | Yes           | `{ followerId }`  |
-| POST   | `/follow/unfollow-user`        | Unfollow a user              | Yes           | `{ followingId }` |
-| POST   | `/follow/remove-follower`      | Remove a follower            | Yes           | `{ followerId }`  |
-| GET    | `/follow/get-pending-requests` | Get pending follow requests  | Yes           | -                 |
-| GET    | `/follow/followers`            | Get list of followers        | Yes           | -                 |
-| GET    | `/follow/followings`           | Get list of users you follow | Yes           | -                 |
-
----
-
-### Post Routes (`/post`)
-
-> **Note:** Actual endpoints may vary due to frequent changes. Example endpoints:
->
-> | Method | Endpoint        | Description       | Auth Required | Body / Params                  |
-> | ------ | --------------- | ----------------- | ------------- | ------------------------------ |
-> | POST   | `/post/upload`  | Upload a post     | Yes           | `{ caption, location, media }` |
-> | GET    | `/post/:postId` | Get a single post | Yes           | URL param: `postId`            |
-> | GET    | `/post/`        | Get all posts     | Yes           | -                              |
-> | DELETE | `/post/:postId` | Delete a post     | Yes           | URL param: `postId`            |
-> | POST   | `/post/like`    | Like a post       | Yes           | `{ postId }`                   |
-> | POST   | `/post/unlike`  | Unlike a post     | Yes           | `{ postId }`                   |
+| Method | Endpoint | Description | Auth |
+|--------|----------|-------------|------|
+| POST | /post/upload | Upload post | Yes |
+| GET | /post/:postId | Get single post | Yes |
+| GET | /post/ | Get all posts | Yes |
+| DELETE | /post/:postId | Delete post | Yes |
+| POST | /post/like | Like post | Yes |
+| POST | /post/unlike | Unlike post | Yes |
 
 ---
 
-# Authentication
+## ChatMS - Real-time WebSocket Chat
 
-- Most protected routes require a valid JWT token in cookies (see `getAccessToRoute` middleware).
-- All endpoints return JSON responses.
-- Error responses follow the format:  
-  `{ success: false, message: "Error message" }`
+**Port: 5679**
 
----
+Separate Spring Boot microservice. Connect:
 
-# Example Error Response
+```
+ws://localhost:5679/chat?userId=<userId>
+```
 
+Send (JSON text frame):
 ```json
-{
-  "success": false,
-  "message": "Invalid Credentials"
-}
+{ receiver: 456, content: Hello, messageType: PRIVATE }
 ```
 
-For detailed API endpoints and usage, refer to the [API Documentation](API_DOCUMENTATION.md).
+See ../chatms/README.md for full docs.
 
 ---
 
-### Contributing
+## Response Format
 
-Contributions are welcome! Please fork the repository and submit pull requests to contribute.
+Success: { success: true, data: {} }
+Error:   { success: false, message: Error message }
 
 ---
 
-### License
+## Contributing
 
-This project is licensed under the [MIT License](LICENSE).
+Fork and submit a pull request.
+
+---
+
+## License
+
+MIT

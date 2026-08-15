@@ -26,6 +26,19 @@ services:
       - redis
       - postgres
 
+  chatms:
+    build:
+      context: ../chatms
+      dockerfile: dockerfile
+    container_name: chatms
+    restart: unless-stopped
+    ports:
+      - "5679:5679"
+    environment:
+      - SERVER_PORT=5679
+    depends_on:
+      - app
+
   redis:
     image: redis:7
     restart: unless-stopped
