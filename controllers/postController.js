@@ -34,7 +34,32 @@ const postController = {
       location: formData.location,
       media: mediaUrl,
       isPrivate: formData.isPrivate === "true" || formData.isPrivate === true, // expects boolean or string 'true'
+      vibeType: formData.vibe, // 👈 NEW FIELD
     });
+
+    // update streak
+    const user = await User.findByPk(req.user.id);
+    const today = new Date().toDateString();
+    const lastDate = user.lastVibeDate
+      ? new Date(user.lastVibeDate).toDateString()
+      : null;
+    logger.log({ today, lastDate, streak: user.streakCount });
+
+    if (lastDate === today) {
+      // already posted today, no change
+    } else if (
+      lastDate &&
+      new Date(today) - new Date(lastDate) === 86400000 // 1 day apart
+    ) {
+      user.streakCount += 1;
+      user.lastVibeDate = new Date();
+    } else {
+      // streak broken or first post
+      user.streakCount = 1;
+      user.lastVibeDate = new Date();
+    }
+    logger.log("New streak:", user.streakCount);
+    await user.save();
 
     res.status(201).json({
       success: true,

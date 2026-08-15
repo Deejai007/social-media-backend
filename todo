@@ -10,6 +10,27 @@
 -docker
 -interactively check if username is unique
 
+
+TODO
+⦁	Change post to vibe
+⦁	Profile page vibe heatmap calender
+⦁	Streak on home/profile
+⦁	Vibe rooms page design
+⦁	Vibe rooms page backend
+⦁	Vite types setup
+⦁
+
+
+-vibe types
+-Vibe rooms
+-MOOD ANALYTICS
+-----vibe calender
+-----vibe streak
+-Anonymous
+-Private vibe
+-vibe badges
+-vibe games
+-trending vibes
 @
 @@
 @

@@ -11,6 +11,21 @@ module.exports = (sequelize, DataTypes) => {
       });
     }
   }
+  const vibeOptions = [
+    { emoji: "😎", label: "Vibin’" },
+    { emoji: "🥳", label: "Lit" },
+    { emoji: "😡", label: "Mad AF" },
+    { emoji: "😢", label: "Lowkey Down" },
+    { emoji: "🤡", label: "Clownin’" },
+    { emoji: "🚀", label: "Amped" },
+    { emoji: "😴", label: "Dead" },
+    { emoji: "🤔", label: "Bruh / What?!" },
+    { emoji: "🫨", label: "High up there" },
+  ];
+
+  // For ENUM, use only the labels
+  const vibeLabels = vibeOptions.map((v) => v.label);
+
   Post.init(
     {
       id: {
@@ -40,10 +55,17 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false,
         defaultValue: false, // false = public, true = private
       },
+      vibeType: {
+        type: DataTypes.ENUM(...vibeLabels),
+        allowNull: true,
+      },
     },
     {
       sequelize,
     }
   );
+
+  // Export vibeOptions for use elsewhere if needed
+  Post.vibeOptions = vibeOptions;
   return Post;
 };

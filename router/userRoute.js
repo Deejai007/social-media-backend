@@ -47,16 +47,18 @@ router.post("/login", loginValidator, authctrl.login);
 router.post(
   "/forgotpassword",
   forgotPasswordValidator,
-  authctrl.forgotpassword
+  authctrl.forgotpassword,
 );
 
 router.post(
   "/forgotresetpassword",
   forgotResetPasswordValidator,
-  authctrl.forgotresetPassword
+  authctrl.forgotresetPassword,
 );
 router.post("/adduserdata", getAccessToRoute, authctrl.addUserData);
-module.exports = router;
+
+router.get("/search", getAccessToRoute, authctrl.searchUsers);
 
 router.post("/feed", getAccessToRoute, authctrl.getFeed);
+
 module.exports = router;

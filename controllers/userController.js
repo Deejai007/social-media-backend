@@ -70,8 +70,8 @@ const userController = {
           "Username is already taken. Choose a different username",
           false,
           401,
-          { target: "username" }
-        )
+          { target: "username" },
+        ),
       );
     }
     const user_db = await User.findOne({ where: { id: userData.id } });
@@ -143,6 +143,7 @@ const userController = {
             verified: user_db.verified,
             location: user_db.location,
           },
+          token: accesstoken
         },
       });
     } else {
@@ -150,8 +151,8 @@ const userController = {
         new CustomError(
           "A user with this email already exists. Please login!",
           false,
-          400
-        )
+          400,
+        ),
       );
     }
   }),
@@ -246,7 +247,7 @@ const userController = {
     });
     if (!user_db)
       return next(
-        new CustomError("An error occured! Please login again.", false, 400)
+        new CustomError("An error occured! Please login again.", false, 400),
       );
     if (user_db.verified)
       return next(new CustomError("User already verified!", true, 200));
@@ -336,6 +337,7 @@ const userController = {
       message: "Login successful",
       data: {
         user: user_db,
+        token: accesstoken
       },
     });
   }),
@@ -354,7 +356,7 @@ const userController = {
     });
     if (!user_db)
       return next(
-        new CustomError("User not found! Please register first", false, 400)
+        new CustomError("User not found! Please register first", false, 400),
       );
 
     if (user_db.resetPasswordExpires > Date.now()) {
@@ -363,8 +365,8 @@ const userController = {
         new CustomError(
           "Email is already sent! If not received, try again after some time!",
           false,
-          400
-        )
+          400,
+        ),
       );
     }
     const token = crypto.randomBytes(20).toString("hex");
@@ -409,8 +411,8 @@ const userController = {
         new CustomError(
           "Password reset token is invalid or has expired!",
           false,
-          400
-        )
+          400,
+        ),
       );
     }
     logger.log(user_db.email);
@@ -419,8 +421,8 @@ const userController = {
         new CustomError(
           "Password reset token is invalid or has expired!",
           false,
-          400
-        )
+          400,
+        ),
       );
     }
     // check validity of token
@@ -428,7 +430,7 @@ const userController = {
 
     if (currentTime > user_db.resetPasswordExpires) {
       return next(
-        new CustomError("Reset password token expired! Try again!", false, 400)
+        new CustomError("Reset password token expired! Try again!", false, 400),
       );
     }
 
@@ -441,8 +443,8 @@ const userController = {
         new CustomError(
           "New password cannot be the same as the old password.",
           false,
-          400
-        )
+          400,
+        ),
       );
     }
     user_db.password = hash;
@@ -466,5 +468,37 @@ const userController = {
       .status(200)
       .json({ success: true, message: "Password successfully changed!" });
   }),
+
+  // search users by query
+  searchUsers: asyncHandler(async (req, res, next) => {
+    const { query } = req.query;
+
+    if (!query || query.trim() === "") {
+      return res.status(200).json({
+        success: true,
+        data: [],
+        message: "No search query provided",
+      });
+    }
+
+    const users = await User.findAll({
+      where: {
+        [require("sequelize").Op.or]: [
+          { username: { [require("sequelize").Op.iLike]: `%${query}%` } },
+          { firstName: { [require("sequelize").Op.iLike]: `%${query}%` } },
+          { lastName: { [require("sequelize").Op.iLike]: `%${query}%` } },
+        ],
+      },
+      attributes: ["id", "username", "firstName", "lastName", "profileImage"],
+      limit: 10,
+    });
+
+    return res.status(200).json({
+      success: true,
+      data: users,
+      message: "Users fetched successfully",
+    });
+  }),
 };
+
 module.exports = userController;

@@ -78,11 +78,23 @@ module.exports = (sequelize, DataTypes) => {
       resetPasswordExpires: {
         type: DataTypes.DATE,
       },
+      currentVibe: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+      lastVibeDate: {
+        type: DataTypes.DATE,
+        defaultValue: null,
+      },
+      streakCount: {
+        type: DataTypes.INTEGER,
+        defaultValue: 0,
+      },
     },
     {
       sequelize,
       modelName: "User",
-    }
+    },
   );
   return User;
 };

@@ -1,27 +1,34 @@
 const jwt = require("jsonwebtoken");
 const getAccessToRoute = (req, res, next) => {
   try {
-    // console.log("h1", req.cookies);
-    let token = req.cookies.token;
-    // console.log("h2", token);
+    // prefer cookie token
+    let token = req.cookies && req.cookies.token;
+
+    // fallback: Authorization header (Bearer token)
+    if (!token) {
+      const authHeader = req.header("Authorization") || req.header("authorization");
+      if (authHeader && authHeader.startsWith("Bearer ")) {
+        token = authHeader.replace(/^Bearer\s+/, "");
+      }
+    }
+
     if (!token)
       return res
         .status(401)
         .json({ message: "Please login first to continue!" });
-    // token = token.replace(/^Bearer\s+/, "");
+
     jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, user) => {
-      // console.log(user);
-      if (user.verified == false) {
-        return res
-          .status(402)
-          .json({ message: "Please verify user email to continue." });
-      }
       if (err)
         return res
           .status(402)
           .json({ message: "Invalid Authentication token" });
 
-      // console.log("h3", user);
+      if (user && user.verified == false) {
+        return res
+          .status(402)
+          .json({ message: "Please verify user email to continue." });
+      }
+
       req.user = user;
       next();
     });
