@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "dev": "nodemon index.js",
-    "test": "npm run test",
+    "test": "node --test",
     "start": "node index.js",
     "worker": "node worker.js"
   },
@@ -25,7 +25,6 @@
     "fs": "^0.0.1-security",
     "jsonwebtoken": "^9.0.2",
     "multer": "^1.4.5-lts.1",
-    "nodemailer": "^6.9.12",
     "nodemon": "^3.1.0",
     "otp-generator": "^4.0.1",
     "path": "^0.12.7",

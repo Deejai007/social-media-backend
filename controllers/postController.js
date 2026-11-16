@@ -3,7 +3,9 @@ const CustomError = require("../helpers/customError");
 const asyncHandler = require("express-async-handler");
 const fs = require("fs");
 const cloudinary = require("../config/cloudinary");
-const { User, Post, Like } = require("../models");
+const { User, Post, Like, Follow } = require("../models");
+const logger = require("../helpers/logger");
+const { Op } = require("sequelize");
 
 const postController = {
   // get user data
@@ -149,6 +151,74 @@ const postController = {
     });
 
     res.status(201).json({ success: true, data: posts, message: "success" });
+  }),
+
+  // Get the authenticated user's chronological feed
+  getFeed: asyncHandler(async (req, res) => {
+    const viewerId = Number(req.user.id);
+    const requestedLimit = Number.parseInt(req.query.limit, 10);
+    const requestedOffset = Number.parseInt(req.query.offset, 10);
+    const limit = Number.isInteger(requestedLimit)
+      ? Math.min(Math.max(requestedLimit, 1), 50)
+      : 10;
+    const offset =
+      Number.isInteger(requestedOffset) && requestedOffset > 0
+        ? requestedOffset
+        : 0;
+
+    const acceptedFollowings = await Follow.findAll({
+      attributes: ["followingId"],
+      where: { followerId: viewerId, status: "accepted" },
+      raw: true,
+    });
+    const authorIds = [
+      ...new Set([
+        viewerId,
+        ...acceptedFollowings.map((follow) => follow.followingId),
+      ]),
+    ];
+
+    const posts = await Post.findAll({
+      where: { userId: { [Op.in]: authorIds } },
+      include: [
+        {
+          model: User,
+          as: "post",
+          attributes: ["id", "username", "profileImage"],
+        },
+        {
+          model: Like,
+          as: "likes",
+          attributes: ["id"],
+          where: { userId: viewerId },
+          required: false,
+        },
+      ],
+      order: [
+        ["createdAt", "DESC"],
+        ["id", "DESC"],
+      ],
+      offset,
+      limit: limit + 1,
+    });
+
+    const hasMore = posts.length > limit;
+    const data = posts.slice(0, limit).map((post) => {
+      const postData = post.toJSON();
+      postData.username = postData.post.username;
+      postData.profileImage = postData.post.profileImage;
+      postData.isLikedByUser = postData.likes.length > 0;
+      delete postData.post;
+      delete postData.likes;
+      return postData;
+    });
+
+    res.status(200).json({
+      success: true,
+      data,
+      hasMore,
+      message: "success",
+    });
   }),
 
   // delete post

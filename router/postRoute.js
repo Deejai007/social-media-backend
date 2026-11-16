@@ -8,6 +8,8 @@ router.get("/", (req, res) => res.status(200).json({ message: "post route" }));
 
 router.get("/get-post/:postId", getAccessToRoute, postctrl.getSinglePost);
 
+router.get("/feed", getAccessToRoute, postctrl.getFeed);
+
 router.get("/get-user-posts/:userId", getAccessToRoute, postctrl.getPosts);
 // router.get("/get-user-posts", getAccessToRoute, postctrl.getPosts);
 router.post(

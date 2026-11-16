@@ -29,7 +29,13 @@ const userController = {
         followingId: user_db.id,
       },
     });
-    // logger.log(isFollowing);
+    const isFollowedByUserRecord = await Follow.findOne({
+      where: {
+        followerId: user_db.id,
+        followingId: req.user.id,
+        status: "accepted",
+      },
+    });
 
     const followerCount = await Follow.count({
       where: { followingId: user_db.id },
@@ -41,6 +47,7 @@ const userController = {
     const userResponse = {
       ...user_db.toJSON(),
       isFollowing: isFollowingRecord?.status || null,
+      isFollowedByUser: Boolean(isFollowedByUserRecord),
       followerCount,
       followingCount,
     };
