@@ -9,6 +9,11 @@ module.exports = (sequelize, DataTypes) => {
         as: "likes",
         onDelete: "CASCADE", //to delete associated likes if post is deleted
       });
+      Post.hasMany(models.Notification, {
+        foreignKey: "postId",
+        as: "notifications",
+        onDelete: "CASCADE",
+      });
     }
   }
   const vibeOptions = [
@@ -62,7 +67,7 @@ module.exports = (sequelize, DataTypes) => {
     },
     {
       sequelize,
-    }
+    },
   );
 
   // Export vibeOptions for use elsewhere if needed

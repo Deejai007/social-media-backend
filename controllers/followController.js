@@ -1,7 +1,7 @@
 const CustomError = require("../helpers/customError");
 const { sequelize } = require("../models/index");
 const asyncHandler = require("express-async-handler");
-const { User, Follow } = require("../models");
+const { User, Follow, Notification } = require("../models");
 require("dotenv").config();
 
 const followController = {
@@ -16,7 +16,7 @@ const followController = {
     });
     if (existingFollow) {
       return next(
-        new CustomError("Follow request already pending", false, 401)
+        new CustomError("Follow request already pending", false, 401),
       );
     }
     const follow = await Follow.create({
@@ -34,32 +34,43 @@ const followController = {
   // Accept follow request
   acceptFollowReq: asyncHandler(async (req, res, next) => {
     const { followerId } = req.body;
-    console.log(followerId, req.user.id);
     if (followerId == req.user.id) {
       return next(new CustomError("Can't follow yourself!", false, 401));
     }
     const t = await sequelize.transaction();
     try {
       const follow = await Follow.findOne({
-        where: { followerId: followerId, followingId: req.user.id },
+        where: {
+          followerId,
+          followingId: req.user.id,
+          status: "pending",
+        },
         transaction: t,
       });
       if (!follow) {
         await t.rollback();
         return next(
-          new CustomError("No pending follow request found", false, 401)
+          new CustomError("No pending follow request found", false, 401),
         );
       }
       await User.update(
         { followerCount: sequelize.literal("followerCount + 1") },
-        { where: { id: req.user.id }, transaction: t }
+        { where: { id: req.user.id }, transaction: t },
       );
       await User.update(
         { followingCount: sequelize.literal("followingCount + 1") },
-        { where: { id: followerId }, transaction: t }
+        { where: { id: followerId }, transaction: t },
       );
       follow.status = "accepted";
       await follow.save({ transaction: t });
+      await Notification.create(
+        {
+          userId: req.user.id,
+          actorId: followerId,
+          type: "new_follower",
+        },
+        { transaction: t },
+      );
       await t.commit();
       res.json({
         success: true,
@@ -67,10 +78,9 @@ const followController = {
         data: follow,
       });
     } catch (error) {
-      console.log(error);
       await t.rollback();
       return next(
-        new CustomError("Error accepting follow request", false, 500)
+        new CustomError("Error accepting follow request", false, 500),
       );
     }
   }),
@@ -86,7 +96,7 @@ const followController = {
     });
     if (!follow) {
       return next(
-        new CustomError("No pending follow request found", false, 401)
+        new CustomError("No pending follow request found", false, 401),
       );
     }
     await follow.destroy();
@@ -126,8 +136,7 @@ const followController = {
 
   // Unfollow user or remove follow request
   unfollowUser: asyncHandler(async (req, res, next) => {
-    const { followingId, mode } = req.body.userData;
-    console.log(req.body);
+    const { followingId } = req.body.userData;
     if (!followingId) {
       return next(new CustomError("'followingId' is required", false, 400));
     }
@@ -143,26 +152,17 @@ const followController = {
       if (!follow) {
         await t.rollback();
         return next(
-          new CustomError("No follow relationship found", false, 401)
+          new CustomError("No follow relationship found", false, 401),
         );
       }
-      if (mode === "unfollow") {
-        await User.update(
-          { followerCount: sequelize.literal("followerCount - 1") },
-          { where: { id: followingId }, transaction: t }
-        );
+      if (follow.status === "accepted") {
         await User.update(
           { followingCount: sequelize.literal("followingCount - 1") },
-          { where: { id: req.user.id }, transaction: t }
-        );
-      } else if (mode === "reqUnfollow") {
-        await User.update(
-          { followingCount: sequelize.literal("followingCount - 1") },
-          { where: { id: req.user.id }, transaction: t }
+          { where: { id: req.user.id }, transaction: t },
         );
         await User.update(
           { followerCount: sequelize.literal("followerCount - 1") },
-          { where: { id: followingId }, transaction: t }
+          { where: { id: followingId }, transaction: t },
         );
       }
       await follow.destroy({ transaction: t });
@@ -197,11 +197,11 @@ const followController = {
       }
       await User.update(
         { followerCount: sequelize.literal("followerCount - 1") },
-        { where: { id: req.user.id }, transaction: t }
+        { where: { id: req.user.id }, transaction: t },
       );
       await User.update(
         { followingCount: sequelize.literal("followingCount - 1") },
-        { where: { id: followerId }, transaction: t }
+        { where: { id: followerId }, transaction: t },
       );
       await follow.destroy({ transaction: t });
       await t.commit();

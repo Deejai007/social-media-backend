@@ -29,6 +29,16 @@ module.exports = (sequelize, DataTypes) => {
         as: "likes",
         onDelete: "CASCADE",
       });
+      User.hasMany(models.Notification, {
+        foreignKey: "userId",
+        as: "notifications",
+        onDelete: "CASCADE",
+      });
+      User.hasMany(models.Notification, {
+        foreignKey: "actorId",
+        as: "sentNotifications",
+        onDelete: "CASCADE",
+      });
     }
   }
   User.init(

@@ -3,40 +3,58 @@ const CustomError = require("../helpers/customError");
 const asyncHandler = require("express-async-handler");
 const fs = require("fs");
 const cloudinary = require("../config/cloudinary");
-const { User, Post, Like, Follow } = require("../models");
+const {
+  User,
+  Post,
+  Like,
+  Follow,
+  Notification,
+  sequelize,
+} = require("../models");
 const logger = require("../helpers/logger");
 const { Op } = require("sequelize");
 
 const postController = {
   // get user data
   uploadPost: asyncHandler(async (req, res, next) => {
-    const { userId } = req.user.id;
-    let formData = req.body;
+    const formData = req.body;
+    const imageFile = req.files?.[0];
+    const caption =
+      typeof formData.caption === "string" ? formData.caption : "";
+    const hasValidVibe = Post.vibeOptions.some(
+      ({ label }) => label === formData.vibe,
+    );
 
-    console.log(formData);
-    const imageFile = req.files[0];
+    if (!hasValidVibe) {
+      return next(new CustomError("Choose a valid vibe.", false, 400));
+    }
+    if (!imageFile && !caption.trim()) {
+      return next(
+        new CustomError("Add a photo or write something to share.", false, 400),
+      );
+    }
 
-    const result = await new Promise((resolve, reject) => {
-      cloudinary.uploader.upload(imageFile.path, (error, result) => {
-        if (error) {
-          reject(error);
-        } else {
-          console.log("Image uploaded:", result.secure_url);
-          fs.unlinkSync(imageFile.path);
-          resolve(result.secure_url);
-        }
+    let mediaUrl = null;
+    if (imageFile) {
+      mediaUrl = await new Promise((resolve, reject) => {
+        cloudinary.uploader.upload(imageFile.path, (error, result) => {
+          if (error) {
+            reject(error);
+          } else {
+            fs.unlinkSync(imageFile.path);
+            resolve(result.secure_url);
+          }
+        });
       });
-    });
+    }
 
-    const mediaUrl = result;
-    // Create new post with privacy setting
     const newPost = await Post.create({
       userId: req.user.id,
-      caption: formData.caption,
+      caption,
       location: formData.location,
       media: mediaUrl,
-      isPrivate: formData.isPrivate === "true" || formData.isPrivate === true, // expects boolean or string 'true'
-      vibeType: formData.vibe, // 👈 NEW FIELD
+      isPrivate: false,
+      vibeType: formData.vibe,
     });
 
     // update streak
@@ -231,7 +249,7 @@ const postController = {
     }
     if (post.userId !== req.user.id) {
       return next(
-        new CustomError("Unauthorized to delete this post", false, 403)
+        new CustomError("Unauthorized to delete this post", false, 403),
       );
     }
     await post.destroy();
@@ -242,14 +260,10 @@ const postController = {
   }),
   //like post
   likePost: asyncHandler(async (req, res, next) => {
-    // console.log(req.user.id);
-    console.log(req.body);
     const { postId } = req.body;
-    console.log(postId);
     const likechk = await Like.count({
-      where: { userId: req.user.id, postId: req.body.postId },
+      where: { userId: req.user.id, postId },
     });
-    console.log(likechk);
     if (likechk) {
       res
         .status(201)
@@ -257,11 +271,36 @@ const postController = {
       return;
     }
 
-    const like = await Like.create({
-      userId: req.user.id,
-      postId: req.body.postId,
+    const post = await Post.findByPk(postId);
+    if (!post) {
+      return next(new CustomError("Post not found", false, 404));
+    }
+
+    await sequelize.transaction(async (transaction) => {
+      await Like.create(
+        {
+          userId: req.user.id,
+          postId,
+        },
+        { transaction },
+      );
+      await Post.increment("likeCount", {
+        by: 1,
+        where: { id: postId },
+        transaction,
+      });
+      if (post.userId !== req.user.id) {
+        await Notification.create(
+          {
+            userId: post.userId,
+            actorId: req.user.id,
+            postId,
+            type: "post_like",
+          },
+          { transaction },
+        );
+      }
     });
-    await Post.increment("likeCount", { by: 1, where: { id: postId } });
     res.status(201).json({ success: true, data: "", message: "Liked post" });
   }),
   //unlike post

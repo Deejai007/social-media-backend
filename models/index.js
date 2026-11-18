@@ -54,6 +54,14 @@ Object.keys(db).forEach((modelName) => {
   }
 });
 
+db.Notification.sync()
+  .then(() => {
+    console.log("Notifications table synchronized.");
+  })
+  .catch((error) => {
+    console.error("Error synchronizing the notifications table:", error);
+  });
+
 db.sequelize = sequelize;
 // db.Sequelize = Sequelize;
 

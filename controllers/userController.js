@@ -22,7 +22,6 @@ const userController = {
     if (!user_db) {
       return next(new CustomError("Unable to fetch data", false, 401));
     }
-    logger.log(user_db);
     const isFollowingRecord = await Follow.findOne({
       where: {
         followerId: req.user.id,
@@ -38,10 +37,10 @@ const userController = {
     });
 
     const followerCount = await Follow.count({
-      where: { followingId: user_db.id },
+      where: { followingId: user_db.id, status: "accepted" },
     });
     const followingCount = await Follow.count({
-      where: { followerId: user_db.id },
+      where: { followerId: user_db.id, status: "accepted" },
     });
 
     const userResponse = {
@@ -150,7 +149,7 @@ const userController = {
             verified: user_db.verified,
             location: user_db.location,
           },
-          token: accesstoken
+          token: accesstoken,
         },
       });
     } else {
@@ -344,7 +343,7 @@ const userController = {
       message: "Login successful",
       data: {
         user: user_db,
-        token: accesstoken
+        token: accesstoken,
       },
     });
   }),

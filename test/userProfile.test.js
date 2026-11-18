@@ -32,6 +32,7 @@ require.cache[mailQueuePath] = {
 const userController = require("../controllers/userController");
 let response;
 let followQueries;
+let countQueries;
 
 beforeEach(() => {
   response = {
@@ -47,11 +48,15 @@ beforeEach(() => {
     },
   };
   followQueries = [];
+  countQueries = [];
   models.Follow.findOne = async (query) => {
     followQueries.push(query);
     return followQueries.length === 2 ? { id: 4 } : null;
   };
-  models.Follow.count = async () => 0;
+  models.Follow.count = async (query) => {
+    countQueries.push(query);
+    return countQueries.length === 1 ? 2 : 3;
+  };
 });
 
 after(() => {
@@ -81,4 +86,10 @@ test("profile reports when the viewed user follows the current user", async () =
     status: "accepted",
   });
   assert.equal(response.body.data.user.isFollowedByUser, true);
+  assert.deepEqual(countQueries, [
+    { where: { followingId: 8, status: "accepted" } },
+    { where: { followerId: 8, status: "accepted" } },
+  ]);
+  assert.equal(response.body.data.user.followerCount, 2);
+  assert.equal(response.body.data.user.followingCount, 3);
 });
